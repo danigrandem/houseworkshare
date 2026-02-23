@@ -61,7 +61,7 @@ export default function SetupHouseClient({ userId, userEmail }: SetupHouseClient
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-celeste-50 flex items-center justify-center p-4">
       <div className="max-w-md w-full space-y-6">
         <div className="text-center">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
@@ -97,7 +97,7 @@ export default function SetupHouseClient({ userId, userEmail }: SetupHouseClient
                   <button
                     onClick={() => handleAcceptInvitation(inv.id)}
                     disabled={loading}
-                    className="w-full px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 disabled:opacity-50"
+                    className="w-full px-4 py-2 bg-celeste-600 text-white rounded hover:bg-celeste-700 disabled:opacity-50"
                   >
                     Aceptar Invitación
                   </button>
@@ -107,7 +107,7 @@ export default function SetupHouseClient({ userId, userEmail }: SetupHouseClient
             <div className="mt-4 pt-4 border-t">
               <button
                 onClick={() => setMode('create')}
-                className="text-sm text-indigo-600 hover:text-indigo-800"
+                className="text-sm text-celeste-600 hover:text-celeste-800"
               >
                 O crear una nueva casa
               </button>
@@ -118,21 +118,19 @@ export default function SetupHouseClient({ userId, userEmail }: SetupHouseClient
             <div className="flex gap-4 mb-6">
               <button
                 onClick={() => setMode('create')}
-                className={`flex-1 px-4 py-2 rounded ${
-                  mode === 'create'
-                    ? 'bg-indigo-600 text-white'
-                    : 'bg-gray-100 text-gray-700'
-                }`}
+                className={`flex-1 px-4 py-2 rounded ${mode === 'create'
+                  ? 'bg-celeste-600 text-white'
+                  : 'bg-gray-100 text-gray-700'
+                  }`}
               >
                 Crear Casa
               </button>
               <button
                 onClick={() => setMode('join')}
-                className={`flex-1 px-4 py-2 rounded ${
-                  mode === 'join'
-                    ? 'bg-indigo-600 text-white'
-                    : 'bg-gray-100 text-gray-700'
-                }`}
+                className={`flex-1 px-4 py-2 rounded ${mode === 'join'
+                  ? 'bg-celeste-600 text-white'
+                  : 'bg-gray-100 text-gray-700'
+                  }`}
               >
                 Unirse
               </button>
@@ -153,14 +151,14 @@ export default function SetupHouseClient({ userId, userEmail }: SetupHouseClient
                     value={houseName}
                     onChange={(e) => setHouseName(e.target.value)}
                     required
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-celeste-500 focus:border-celeste-500"
                     placeholder="Ej: Casa de los García"
                   />
                 </div>
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full px-4 py-2 bg-celeste-600 text-white rounded hover:bg-celeste-700 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {loading ? 'Creando...' : 'Crear Casa'}
                 </button>

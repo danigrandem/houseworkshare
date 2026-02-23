@@ -68,7 +68,7 @@ export default function GroupForm({ group, tasks }: GroupFormProps) {
           value={name}
           onChange={(e) => setName(e.target.value)}
           required
-          className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+          className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-celeste-500 focus:border-celeste-500"
         />
       </div>
 
@@ -90,7 +90,7 @@ export default function GroupForm({ group, tasks }: GroupFormProps) {
                     type="checkbox"
                     checked={selectedTasks.includes(task.id)}
                     onChange={() => handleTaskToggle(task.id)}
-                    className="mr-3 h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+                    className="mr-3 h-4 w-4 text-celeste-600 focus:ring-celeste-500 border-gray-300 rounded"
                   />
                   <div className="flex-1">
                     <span className="text-sm font-medium text-gray-900">{task.name}</span>
@@ -110,7 +110,7 @@ export default function GroupForm({ group, tasks }: GroupFormProps) {
         <button
           type="submit"
           disabled={loading}
-          className="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="px-4 py-2 bg-celeste-600 text-white rounded hover:bg-celeste-700 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {loading ? 'Guardando...' : group ? 'Actualizar' : 'Crear'}
         </button>

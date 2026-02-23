@@ -31,13 +31,13 @@ export default function TasksList({ tasks: initialTasks }: TasksListProps) {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-celeste-50">
       <div className="max-w-4xl mx-auto px-4 py-8">
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-3xl font-bold text-gray-900">Tareas</h1>
           <Link
             href="/tasks/new"
-            className="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700"
+            className="px-4 py-2 bg-celeste-600 text-white rounded hover:bg-celeste-700"
           >
             Nueva Tarea
           </Link>
@@ -77,7 +77,7 @@ export default function TasksList({ tasks: initialTasks }: TasksListProps) {
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                       <Link
                         href={`/tasks/${task.id}/edit`}
-                        className="text-indigo-600 hover:text-indigo-900 mr-4"
+                        className="text-celeste-600 hover:text-celeste-900 mr-4"
                       >
                         Editar
                       </Link>

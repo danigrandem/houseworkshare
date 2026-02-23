@@ -40,7 +40,7 @@ export default function SettingsClient({
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-celeste-50">
       <div className="max-w-2xl mx-auto px-4 py-8">
         <h1 className="text-3xl font-bold text-gray-900 mb-8">Configuración</h1>
 
@@ -79,7 +79,7 @@ export default function SettingsClient({
                 onChange={(e) => setPointsTarget(parseInt(e.target.value) || 0)}
                 required
                 min="0"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-celeste-500 focus:border-celeste-500"
               />
               <p className="mt-2 text-sm text-gray-500">
                 Cada participante deberá completar esta cantidad de puntos durante la semana.
@@ -89,7 +89,7 @@ export default function SettingsClient({
             <button
               type="submit"
               disabled={loading}
-              className="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-4 py-2 bg-celeste-600 text-white rounded hover:bg-celeste-700 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? 'Guardando...' : 'Guardar Configuración'}
             </button>

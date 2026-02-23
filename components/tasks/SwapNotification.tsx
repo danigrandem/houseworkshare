@@ -31,20 +31,20 @@ export default function SwapNotification({ swap, onResponse }: SwapNotificationP
   }
 
   return (
-    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+    <div className="bg-celeste-50 border border-celeste-200 rounded-lg p-4 mb-4">
       <div className="flex justify-between items-start">
         <div className="flex-1">
-          <h3 className="text-sm font-medium text-blue-900">
+          <h3 className="text-sm font-medium text-celeste-900">
             Solicitud de intercambio de {swap.task.name}
           </h3>
-          <p className="text-xs text-blue-700 mt-1">
+          <p className="text-xs text-celeste-700 mt-1">
             De: {swap.from_user.name || swap.from_user.email}
           </p>
-          <p className="text-xs text-blue-700">
+          <p className="text-xs text-celeste-700">
             Tipo: {swap.swap_type === 'temporary' ? 'Temporal' : 'Permanente'}
             {swap.swap_date && ` - Fecha: ${swap.swap_date}`}
           </p>
-          <p className="text-xs text-blue-600 mt-1">
+          <p className="text-xs text-celeste-600 mt-1">
             {formatDateTime(swap.requested_at)}
           </p>
         </div>

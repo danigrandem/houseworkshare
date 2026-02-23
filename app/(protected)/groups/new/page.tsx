@@ -13,7 +13,7 @@ export default async function NewGroupPage() {
     redirect('/login')
   }
 
-  const tasks = await getAllTasks()
+  const tasks = await getAllTasks(user.id)
 
   return (
     <div className="min-h-screen bg-gray-50">

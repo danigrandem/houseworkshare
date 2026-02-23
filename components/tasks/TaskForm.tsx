@@ -53,7 +53,7 @@ export default function TaskForm({ task }: TaskFormProps) {
           value={name}
           onChange={(e) => setName(e.target.value)}
           required
-          className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+          className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-celeste-500 focus:border-celeste-500"
         />
       </div>
 
@@ -68,7 +68,7 @@ export default function TaskForm({ task }: TaskFormProps) {
           onChange={(e) => setPoints(parseInt(e.target.value) || 0)}
           required
           min="0"
-          className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+          className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-celeste-500 focus:border-celeste-500"
         />
       </div>
 
@@ -76,7 +76,7 @@ export default function TaskForm({ task }: TaskFormProps) {
         <button
           type="submit"
           disabled={loading}
-          className="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="px-4 py-2 bg-celeste-600 text-white rounded hover:bg-celeste-700 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {loading ? 'Guardando...' : task ? 'Actualizar' : 'Crear'}
         </button>

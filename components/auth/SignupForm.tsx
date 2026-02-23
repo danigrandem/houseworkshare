@@ -20,9 +20,9 @@ export default function SignupForm() {
 
     try {
       const supabase = createClient()
-      
+
       const redirectTo = `${window.location.origin}/api/auth/callback`
-      
+
       const { data: authData, error: signUpError } = await supabase.auth.signUp({
         email,
         password,
@@ -82,7 +82,7 @@ export default function SignupForm() {
             name="name"
             type="text"
             autoComplete="name"
-            className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+            className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-celeste-500 focus:border-celeste-500 focus:z-10 sm:text-sm"
             placeholder="Nombre (opcional)"
             value={name}
             onChange={(e) => setName(e.target.value)}
@@ -98,7 +98,7 @@ export default function SignupForm() {
             type="email"
             autoComplete="email"
             required
-            className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+            className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-celeste-500 focus:border-celeste-500 focus:z-10 sm:text-sm"
             placeholder="Email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
@@ -114,7 +114,7 @@ export default function SignupForm() {
             type="password"
             autoComplete="new-password"
             required
-            className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+            className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-celeste-500 focus:border-celeste-500 focus:z-10 sm:text-sm"
             placeholder="Contraseña"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
@@ -126,7 +126,7 @@ export default function SignupForm() {
         <button
           type="submit"
           disabled={loading}
-          className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-celeste-600 hover:bg-celeste-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-celeste-500 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {loading ? 'Creando cuenta...' : 'Crear cuenta'}
         </button>
@@ -135,7 +135,7 @@ export default function SignupForm() {
       <div className="text-center">
         <Link
           href="/login"
-          className="font-medium text-indigo-600 hover:text-indigo-500"
+          className="font-medium text-celeste-600 hover:text-celeste-500"
         >
           ¿Ya tienes cuenta? Inicia sesión
         </Link>
