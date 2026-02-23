@@ -62,10 +62,11 @@ export async function getHouseById(houseId: string): Promise<HouseWithMembers | 
 
   return {
     ...house,
-    members: (members || []).map((m) => ({
-      ...m,
-      user: m.user as User,
-    })),
+    members: (members || []).map((m) => {
+      const row = m as unknown as { user: User | User[] }
+      const user = Array.isArray(row.user) ? row.user[0] : row.user
+      return { ...m, user }
+    }),
   }
 }
 
@@ -78,7 +79,11 @@ export async function getUserHouses(userId: string): Promise<House[]> {
     .eq('user_id', userId)
 
   if (error) throw error
-  return (data || []).map((item) => item.house as House)
+  return (data || []).map((item) => {
+    const row = item as unknown as { house: House | House[] }
+    const house = Array.isArray(row.house) ? row.house[0] : row.house
+    return house
+  })
 }
 
 export async function getCurrentUserHouse(userId: string): Promise<HouseWithMembers | null> {
@@ -110,10 +115,11 @@ export async function getCurrentUserHouse(userId: string): Promise<HouseWithMemb
 
   return {
     ...houseData,
-    members: (houseData.members || []).map((m: any) => ({
-      ...m,
-      user: m.user as User,
-    })),
+    members: (houseData.members || []).map((m: unknown) => {
+      const row = m as { user: User | User[] }
+      const user = Array.isArray(row.user) ? row.user[0] : row.user
+      return { ...(m as object), user }
+    }),
   }
 }
 

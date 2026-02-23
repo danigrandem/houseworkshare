@@ -13,5 +13,5 @@ export async function updateWeeklyConfig(weekStartDate: string, pointsTargetPerP
     throw new Error('Unauthorized')
   }
 
-  return await createOrUpdateWeeklyConfig(weekStartDate, pointsTargetPerPerson)
+  return await createOrUpdateWeeklyConfig(weekStartDate, pointsTargetPerPerson, user.id)
 }

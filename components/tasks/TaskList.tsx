@@ -9,6 +9,7 @@ type TaskListProps = {
   onComplete: (taskId: string) => void
   onSwap?: (taskId: string) => void
   swaps?: Map<string, { isSwapped: boolean; swapType?: 'temporary' | 'permanent' }>
+  loading?: string | null
 }
 
 export default function TaskList({

@@ -1,7 +1,7 @@
 import type { MetadataRoute } from 'next'
 
 export default function manifest(): MetadataRoute.Manifest {
-  return {
+  return ({
     name: 'House Work Share',
     short_name: 'House Work Share',
     description: 'Sistema de gestión de tareas domésticas con puntos',
@@ -48,5 +48,5 @@ export default function manifest(): MetadataRoute.Manifest {
         label: 'House Work Share en móvil',
       },
     ],
-  }
+  }) as unknown as MetadataRoute.Manifest
 }

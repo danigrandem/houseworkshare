@@ -28,7 +28,7 @@ export async function rotateWeeklyAssignments(userId: string, weekStartDate?: st
   const previousWeek = new Date(targetWeek)
   previousWeek.setDate(previousWeek.getDate() - 7)
   const previousWeekStart = getWeekStartString(previousWeek)
-  const previousAssignments = await getAllWeeklyAssignments(previousWeekStart)
+  const previousAssignments = await getAllWeeklyAssignments(previousWeekStart, userId)
   const previousMap = new Map(
     previousAssignments.map((a) => [a.user_id, a.task_group_id])
   )

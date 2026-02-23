@@ -11,6 +11,7 @@ type TaskCardProps = {
   onSwap?: () => void
   isSwapped?: boolean
   swapType?: 'temporary' | 'permanent'
+  loading?: boolean
 }
 
 export default function TaskCard({

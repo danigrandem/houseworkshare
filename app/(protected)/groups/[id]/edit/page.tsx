@@ -19,7 +19,7 @@ export default async function EditGroupPage({
   }
 
   const { id } = await params
-  const [group, tasks] = await Promise.all([getGroupById(id), getAllTasks()])
+  const [group, tasks] = await Promise.all([getGroupById(id), getAllTasks(user.id)])
 
   if (!group) {
     redirect('/groups')

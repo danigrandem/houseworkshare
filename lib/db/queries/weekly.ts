@@ -237,10 +237,11 @@ export async function getAllWeeklyScores(
     .order('points_earned', { ascending: false })
 
   if (error) throw error
-  return (data || []).map((item) => ({
-    ...item,
-    user: item.user as User,
-  }))
+  return (data || []).map((item) => {
+    const row = item as unknown as { user: User | User[] }
+    const user = Array.isArray(row.user) ? row.user[0] : row.user
+    return { ...item, user }
+  })
 }
 
 export async function getAllUsers(userId: string): Promise<User[]> {
@@ -253,5 +254,9 @@ export async function getAllUsers(userId: string): Promise<User[]> {
     .eq('house_id', houseId)
 
   if (membersError) throw membersError
-  return (members || []).map((m) => m.user as User)
+  return (members || []).map((m) => {
+    const row = m as unknown as { user: User | User[] }
+    const user = Array.isArray(row.user) ? row.user[0] : row.user
+    return user
+  })
 }
