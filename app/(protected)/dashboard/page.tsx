@@ -8,7 +8,7 @@ import {
   getWeeklyConfig,
   getAllUsers,
 } from '@/lib/db/queries/weekly'
-import { getCompletionsByUserAndWeek } from '@/lib/db/queries/completions'
+import { getCompletionsByUserAndWeek, getPendingCompletionsToValidate } from '@/lib/db/queries/completions'
 import { getPendingSwapsForUser, getActiveSwapForTask } from '@/lib/db/queries/swaps'
 import DashboardClient from '@/components/dashboard/DashboardClient'
 
@@ -28,17 +28,19 @@ export default async function DashboardPage() {
   }
 
   const weekStartDate = getWeekStartString()
-  const [assignment, weeklyScore, weeklyConfig, completions, pendingSwaps, users] = await Promise.all([
+  const [assignment, weeklyScore, weeklyConfig, completions, pendingCompletionsToValidate, pendingSwaps, users] = await Promise.all([
     getWeeklyAssignment(user.id, weekStartDate),
     getWeeklyScore(user.id, weekStartDate),
     getWeeklyConfig(weekStartDate, user.id),
     getCompletionsByUserAndWeek(user.id, weekStartDate),
+    getPendingCompletionsToValidate(weekStartDate, user.id),
     getPendingSwapsForUser(user.id),
     getAllUsers(user.id),
   ])
 
   const pointsTarget = weeklyConfig?.points_target_per_person || 50
   const pointsEarned = weeklyScore?.points_earned || 0
+  const today = new Date().toISOString().slice(0, 10)
 
   const tasks = assignment?.task_group?.tasks || []
   const activeSwaps = await Promise.all(
@@ -66,6 +68,8 @@ export default async function DashboardPage() {
       pointsTarget={pointsTarget}
       pointsEarned={pointsEarned}
       completions={completions}
+      pendingCompletionsToValidate={pendingCompletionsToValidate}
+      today={today}
       userId={user.id}
       weekStartDate={weekStartDate}
       pendingSwaps={pendingSwaps}

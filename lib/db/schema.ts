@@ -43,11 +43,14 @@ export type HouseWithMembers = House & {
   members: (HouseMember & { user: User })[]
 }
 
+export type TaskFrequency = 'daily' | 'weekly'
+
 export type Task = {
   id: string
   name: string
   points: number
   house_id: string
+  frequency: TaskFrequency
   created_at: string
   updated_at: string
 }
@@ -85,6 +88,8 @@ export type WeeklyAssignment = {
   created_at: string
 }
 
+export type CompletionStatus = 'pending' | 'validated'
+
 export type TaskCompletion = {
   id: string
   task_id: string
@@ -93,6 +98,10 @@ export type TaskCompletion = {
   week_start_date: string
   points_earned: number
   house_id: string
+  status: CompletionStatus
+  validated_at: string | null
+  validated_by: string | null
+  completion_date: string | null
   created_at: string
 }
 

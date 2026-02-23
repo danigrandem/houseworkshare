@@ -7,6 +7,7 @@ type TaskCardProps = {
   task: Task
   completed: boolean
   completedAt?: string
+  completionStatus?: 'pending' | 'validated'
   onComplete: () => void
   onSwap?: () => void
   isSwapped?: boolean
@@ -18,6 +19,7 @@ export default function TaskCard({
   task,
   completed,
   completedAt,
+  completionStatus,
   onComplete,
   onSwap,
   isSwapped = false,
@@ -29,10 +31,14 @@ export default function TaskCard({
       <div className="flex items-start justify-between">
         <div className="flex-1">
           <h3 className="text-lg font-semibold text-gray-900">{task.name}</h3>
-          <p className="text-sm text-gray-500 mt-1">{task.points} puntos</p>
+          <p className="text-sm text-gray-500 mt-1">
+            {task.points} puntos {task.frequency === 'daily' ? '· Diaria' : '· Semanal'}
+          </p>
           {completed && completedAt && (
-            <p className="text-xs text-green-600 mt-2">
-              Completada: {formatDateTime(completedAt)}
+            <p className={`text-xs mt-2 ${completionStatus === 'validated' ? 'text-green-600' : 'text-amber-600'}`}>
+              {completionStatus === 'validated'
+                ? `Completada: ${formatDateTime(completedAt)}`
+                : 'Pendiente de validación'}
             </p>
           )}
           {isSwapped && (

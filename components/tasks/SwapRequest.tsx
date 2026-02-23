@@ -108,7 +108,7 @@ export default function SwapRequest({
                   onChange={(e) => setSwapType(e.target.value as 'temporary' | 'permanent')}
                   className="mr-2"
                 />
-                <span className="text-sm text-gray-700">Temporal (solo un día)</span>
+                <span className="text-sm text-gray-900">Temporal (solo un día)</span>
               </label>
               <label className="flex items-center">
                 <input
@@ -118,7 +118,7 @@ export default function SwapRequest({
                   onChange={(e) => setSwapType(e.target.value as 'temporary' | 'permanent')}
                   className="mr-2"
                 />
-                <span className="text-sm text-gray-700">Permanente (resto de la semana)</span>
+                <span className="text-sm text-gray-900">Permanente (resto de la semana)</span>
               </label>
             </div>
           </div>

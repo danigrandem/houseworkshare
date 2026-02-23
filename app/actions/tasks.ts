@@ -1,9 +1,10 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
+import type { TaskFrequency } from '@/lib/db/schema'
 import { createTask, updateTask, deleteTask as deleteTaskQuery } from '@/lib/db/queries/tasks'
 
-export async function createTaskAction(name: string, points: number) {
+export async function createTaskAction(name: string, points: number, frequency: TaskFrequency = 'weekly') {
   const supabase = await createClient()
   const {
     data: { user },
@@ -13,10 +14,10 @@ export async function createTaskAction(name: string, points: number) {
     throw new Error('Unauthorized')
   }
 
-  return await createTask(name, points, user.id)
+  return await createTask(name, points, user.id, frequency)
 }
 
-export async function updateTaskAction(id: string, name: string, points: number) {
+export async function updateTaskAction(id: string, name: string, points: number, frequency?: TaskFrequency) {
   const supabase = await createClient()
   const {
     data: { user },
@@ -26,7 +27,7 @@ export async function updateTaskAction(id: string, name: string, points: number)
     throw new Error('Unauthorized')
   }
 
-  return await updateTask(id, name, points)
+  return await updateTask(id, name, points, frequency)
 }
 
 export async function deleteTask(id: string) {

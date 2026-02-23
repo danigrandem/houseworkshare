@@ -1,5 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
-import type { Task } from '@/lib/db/schema'
+import type { Task, TaskFrequency } from '@/lib/db/schema'
 import { requireHouseId } from './house-utils'
 
 export async function getAllTasks(userId: string): Promise<Task[]> {
@@ -28,13 +28,18 @@ export async function getTaskById(id: string): Promise<Task | null> {
   return data
 }
 
-export async function createTask(name: string, points: number, userId: string): Promise<Task> {
+export async function createTask(
+  name: string,
+  points: number,
+  userId: string,
+  frequency: TaskFrequency = 'weekly'
+): Promise<Task> {
   const supabase = await createClient()
   const houseId = await requireHouseId(userId)
   
   const { data, error } = await supabase
     .from('tasks')
-    .insert({ name, points, house_id: houseId })
+    .insert({ name, points, house_id: houseId, frequency })
     .select()
     .single()
 
@@ -42,11 +47,18 @@ export async function createTask(name: string, points: number, userId: string): 
   return data
 }
 
-export async function updateTask(id: string, name: string, points: number): Promise<Task> {
+export async function updateTask(
+  id: string,
+  name: string,
+  points: number,
+  frequency?: TaskFrequency
+): Promise<Task> {
   const supabase = await createClient()
+  const updates: { name: string; points: number; frequency?: TaskFrequency } = { name, points }
+  if (frequency !== undefined) updates.frequency = frequency
   const { data, error } = await supabase
     .from('tasks')
-    .update({ name, points })
+    .update(updates)
     .eq('id', id)
     .select()
     .single()

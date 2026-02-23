@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import type { Task } from '@/lib/db/schema'
+import type { Task, TaskFrequency } from '@/lib/db/schema'
 import { createTaskAction, updateTaskAction } from '@/app/actions/tasks'
 
 type TaskFormProps = {
@@ -13,6 +13,7 @@ export default function TaskForm({ task }: TaskFormProps) {
   const router = useRouter()
   const [name, setName] = useState(task?.name || '')
   const [points, setPoints] = useState(task?.points || 0)
+  const [frequency, setFrequency] = useState<TaskFrequency>(task?.frequency || 'weekly')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -23,9 +24,9 @@ export default function TaskForm({ task }: TaskFormProps) {
 
     try {
       if (task) {
-        await updateTaskAction(task.id, name, points)
+        await updateTaskAction(task.id, name, points, frequency)
       } else {
-        await createTaskAction(name, points)
+        await createTaskAction(name, points, frequency)
       }
       router.push('/tasks')
       router.refresh()
@@ -70,6 +71,36 @@ export default function TaskForm({ task }: TaskFormProps) {
           min="0"
           className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm text-gray-900 focus:outline-none focus:ring-celeste-500 focus:border-celeste-500"
         />
+      </div>
+
+      <div className="mb-4">
+        <label className="block text-sm font-medium text-gray-700 mb-2">
+          Frecuencia
+        </label>
+        <div className="flex gap-4">
+          <label className="inline-flex items-center text-gray-900">
+            <input
+              type="radio"
+              name="frequency"
+              value="weekly"
+              checked={frequency === 'weekly'}
+              onChange={() => setFrequency('weekly')}
+              className="mr-2 text-celeste-600"
+            />
+            Semanal
+          </label>
+          <label className="inline-flex items-center text-gray-900">
+            <input
+              type="radio"
+              name="frequency"
+              value="daily"
+              checked={frequency === 'daily'}
+              onChange={() => setFrequency('daily')}
+              className="mr-2 text-celeste-600"
+            />
+            Diaria
+          </label>
+        </div>
       </div>
 
       <div className="flex gap-4">

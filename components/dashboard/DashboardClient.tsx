@@ -11,13 +11,16 @@ import TaskList from '@/components/tasks/TaskList'
 import SwapNotification from '@/components/tasks/SwapNotification'
 import SwapRequest from '@/components/tasks/SwapRequest'
 import { getDaysRemainingInWeek, formatDateForDisplay } from '@/lib/utils/date'
-import { createTaskCompletion } from '@/app/actions'
+import { createTaskCompletion, validateTaskCompletion } from '@/app/actions'
+import type { CompletionStatus } from '@/lib/db/schema'
 
 type DashboardClientProps = {
   assignment: WeeklyAssignmentWithGroup | null
   pointsTarget: number
   pointsEarned: number
   completions: TaskCompletionWithTask[]
+  pendingCompletionsToValidate: TaskCompletionWithTask[]
+  today: string
   userId: string
   weekStartDate: string
   pendingSwaps: TaskSwapWithTask[]
@@ -30,6 +33,8 @@ export default function DashboardClient({
   pointsTarget,
   pointsEarned,
   completions,
+  pendingCompletionsToValidate,
+  today,
   userId,
   weekStartDate,
   pendingSwaps,
@@ -38,18 +43,23 @@ export default function DashboardClient({
 }: DashboardClientProps) {
   const router = useRouter()
   const [loading, setLoading] = useState<string | null>(null)
+  const [validatingId, setValidatingId] = useState<string | null>(null)
   const [showSwapRequest, setShowSwapRequest] = useState(false)
   const [selectedTask, setSelectedTask] = useState<{ id: string; name: string } | null>(null)
 
   const tasks = assignment?.task_group?.tasks || []
   const completionsMap = new Map(
-    completions.map((c) => [
-      c.task_id,
-      {
-        completed: true,
-        completedAt: c.completed_at,
-      },
-    ])
+    completions.map((c) => {
+      const key = c.task?.frequency === 'daily' ? `${c.task_id}_${c.completion_date || ''}` : c.task_id
+      return [
+        key,
+        {
+          completed: true,
+          completedAt: c.completed_at,
+          status: c.status as CompletionStatus,
+        },
+      ]
+    })
   )
 
   const handleComplete = async (taskId: string) => {
@@ -76,6 +86,18 @@ export default function DashboardClient({
 
   const handleSwapSuccess = () => {
     router.refresh()
+  }
+
+  const handleValidate = async (completionId: string) => {
+    setValidatingId(completionId)
+    try {
+      await validateTaskCompletion(completionId)
+      router.refresh()
+    } catch (err) {
+      console.error('Error validando:', err)
+    } finally {
+      setValidatingId(null)
+    }
   }
 
   const daysRemaining = getDaysRemainingInWeek()
@@ -127,6 +149,37 @@ export default function DashboardClient({
           </div>
         )}
 
+        {pendingCompletionsToValidate.length > 0 && (
+          <div className="mb-6 bg-amber-50 border border-amber-200 rounded-lg p-4">
+            <h2 className="text-lg font-semibold text-gray-900 mb-3">
+              Pendientes de validar
+            </h2>
+            <p className="text-sm text-gray-600 mb-3">
+              Otros han marcado estas tareas como hechas. Valida para que cuenten los puntos.
+            </p>
+            <ul className="space-y-2">
+              {pendingCompletionsToValidate.map((c) => (
+                <li
+                  key={c.id}
+                  className="flex items-center justify-between gap-4 py-2 border-b border-amber-100 last:border-0"
+                >
+                  <span className="text-gray-900">
+                    <strong>{c.task?.name}</strong> — {c.points_earned} pts
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => handleValidate(c.id)}
+                    disabled={validatingId === c.id}
+                    className="px-3 py-1.5 text-sm font-medium text-white bg-celeste-600 rounded hover:bg-celeste-700 disabled:opacity-50"
+                  >
+                    {validatingId === c.id ? 'Validando...' : 'Validar'}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+
         {assignment?.task_group ? (
           <div>
             <h2 className="text-xl font-semibold text-gray-900 mb-4">
@@ -135,6 +188,7 @@ export default function DashboardClient({
             <TaskList
               tasks={tasks}
               completions={completionsMap}
+              today={today}
               onComplete={handleComplete}
               onSwap={handleSwapClick}
               swaps={swaps}

@@ -5,7 +5,8 @@ import TaskCard from './TaskCard'
 
 type TaskListProps = {
   tasks: Task[]
-  completions: Map<string, { completed: boolean; completedAt?: string }>
+  completions: Map<string, { completed: boolean; completedAt?: string; status?: 'pending' | 'validated' }>
+  today?: string
   onComplete: (taskId: string) => void
   onSwap?: (taskId: string) => void
   swaps?: Map<string, { isSwapped: boolean; swapType?: 'temporary' | 'permanent' }>
@@ -15,6 +16,7 @@ type TaskListProps = {
 export default function TaskList({
   tasks,
   completions,
+  today = '',
   onComplete,
   onSwap,
   swaps,
@@ -26,7 +28,8 @@ export default function TaskList({
         <p className="text-gray-500 text-center py-8">No hay tareas asignadas</p>
       ) : (
         tasks.map((task) => {
-          const completion = completions.get(task.id) || { completed: false }
+          const key = task.frequency === 'daily' ? `${task.id}_${today}` : task.id
+          const completion = completions.get(key) || { completed: false }
           const swap = swaps?.get(task.id) || { isSwapped: false }
           return (
             <TaskCard
@@ -34,6 +37,7 @@ export default function TaskList({
               task={task}
               completed={completion.completed}
               completedAt={completion.completedAt}
+              completionStatus={completion.status}
               onComplete={() => onComplete(task.id)}
               onSwap={onSwap ? () => onSwap(task.id) : undefined}
               isSwapped={swap.isSwapped}
