@@ -84,7 +84,7 @@ export default function SwapRequest({
               value={selectedUserId}
               onChange={(e) => setSelectedUserId(e.target.value)}
               required
-              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-celeste-500 focus:border-celeste-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm text-gray-900 focus:outline-none focus:ring-celeste-500 focus:border-celeste-500"
             >
               <option value="">Seleccionar usuario</option>
               {availableUsers.map((user) => (
@@ -134,7 +134,7 @@ export default function SwapRequest({
                 onChange={(e) => setSwapDate(e.target.value)}
                 required={swapType === 'temporary'}
                 min={new Date().toISOString().split('T')[0]}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-celeste-500 focus:border-celeste-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm text-gray-900 focus:outline-none focus:ring-celeste-500 focus:border-celeste-500"
               />
             </div>
           )}

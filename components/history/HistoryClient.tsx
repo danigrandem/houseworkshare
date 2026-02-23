@@ -33,7 +33,7 @@ export default function HistoryClient({ weeksData }: HistoryClientProps) {
           <select
             value={selectedWeek || ''}
             onChange={(e) => setSelectedWeek(e.target.value)}
-            className="w-full md:w-auto px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-celeste-500 focus:border-celeste-500"
+            className="w-full md:w-auto px-4 py-2 border border-gray-300 rounded-md shadow-sm text-gray-900 focus:outline-none focus:ring-celeste-500 focus:border-celeste-500"
           >
             {weeksData.map((week) => (
               <option key={week.weekStart} value={week.weekStart}>

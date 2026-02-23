@@ -81,7 +81,7 @@ export default function HouseClient({ house, invitations, currentUserId }: House
                     onChange={(e) => setEmail(e.target.value)}
                     required
                     placeholder="email@ejemplo.com"
-                    className="flex-1 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-celeste-500 focus:border-celeste-500"
+                    className="flex-1 px-3 py-2 border border-gray-300 rounded-md shadow-sm text-gray-900 focus:outline-none focus:ring-celeste-500 focus:border-celeste-500"
                   />
                   <button
                     type="submit"
