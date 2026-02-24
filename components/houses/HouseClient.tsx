@@ -51,7 +51,7 @@ export default function HouseClient({ house, invitations, currentUserId }: House
             {house.members.map((member) => (
               <div
                 key={member.id}
-                className="flex items-center justify-between p-3 border border-gray-200 rounded-lg"
+                className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between p-3 border border-gray-200 rounded-lg"
               >
                 <div>
                   <p className="font-medium text-gray-900">
@@ -59,7 +59,7 @@ export default function HouseClient({ house, invitations, currentUserId }: House
                   </p>
                   <p className="text-sm text-gray-500">{member.user.email}</p>
                 </div>
-                <span className="px-2 py-1 text-xs font-medium rounded bg-celeste-100 text-celeste-800">
+                <span className="self-start sm:self-auto px-2 py-1 text-xs font-medium rounded bg-celeste-100 text-celeste-800">
                   {member.role === 'owner' ? 'Dueño' : 'Miembro'}
                 </span>
               </div>
@@ -74,19 +74,19 @@ export default function HouseClient({ house, invitations, currentUserId }: House
                 Invitar Usuario
               </h2>
               <form onSubmit={handleInvite}>
-                <div className="flex gap-2">
+                <div className="flex flex-col gap-2 sm:flex-row sm:gap-2">
                   <input
                     type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     required
                     placeholder="email@ejemplo.com"
-                    className="flex-1 px-3 py-2 border border-gray-300 rounded-md shadow-sm text-gray-900 focus:outline-none focus:ring-celeste-500 focus:border-celeste-500"
+                    className="flex-1 min-w-0 px-3 py-2 border border-gray-300 rounded-md shadow-sm text-gray-900 focus:outline-none focus:ring-celeste-500 focus:border-celeste-500"
                   />
                   <button
                     type="submit"
                     disabled={loading}
-                    className="px-4 py-2 bg-celeste-600 text-white rounded hover:bg-celeste-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="w-full sm:w-auto px-4 py-2 bg-celeste-600 text-white rounded hover:bg-celeste-700 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {loading ? 'Enviando...' : 'Invitar'}
                   </button>
@@ -111,7 +111,7 @@ export default function HouseClient({ house, invitations, currentUserId }: House
                     .map((inv) => (
                       <div
                         key={inv.id}
-                        className="flex items-center justify-between p-3 border border-gray-200 rounded-lg"
+                        className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between p-3 border border-gray-200 rounded-lg"
                       >
                         <div>
                           <p className="font-medium text-gray-900">
@@ -121,7 +121,7 @@ export default function HouseClient({ house, invitations, currentUserId }: House
                             Enviada el {new Date(inv.created_at).toLocaleDateString()}
                           </p>
                         </div>
-                        <span className="px-2 py-1 text-xs font-medium rounded bg-yellow-100 text-yellow-800">
+                        <span className="self-start sm:self-auto px-2 py-1 text-xs font-medium rounded bg-yellow-100 text-yellow-800">
                           Pendiente
                         </span>
                       </div>
