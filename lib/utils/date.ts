@@ -1,14 +1,23 @@
-export function getWeekStart(date: Date = new Date()): Date {
+/**
+ * firstDayOfWeek: 0 = Sunday, 1 = Monday, ... 6 = Saturday (getDay() convention).
+ */
+export function getWeekStart(date: Date = new Date(), firstDayOfWeek: number = 1): Date {
   const d = new Date(date)
   const day = d.getDay()
-  const diff = d.getDate() - day + (day === 0 ? -6 : 1)
-  const weekStart = new Date(d.setDate(diff))
+  let diff: number
+  if (firstDayOfWeek === 0) {
+    diff = d.getDate() - day
+  } else {
+    diff = d.getDate() - day + (day === 0 ? -6 : 1)
+  }
+  const weekStart = new Date(d)
+  weekStart.setDate(diff)
   weekStart.setHours(0, 0, 0, 0)
   return weekStart
 }
 
-export function getWeekEnd(date: Date = new Date()): Date {
-  const weekStart = getWeekStart(date)
+export function getWeekEnd(date: Date = new Date(), firstDayOfWeek: number = 1): Date {
+  const weekStart = getWeekStart(date, firstDayOfWeek)
   const weekEnd = new Date(weekStart)
   weekEnd.setDate(weekEnd.getDate() + 6)
   weekEnd.setHours(23, 59, 59, 999)
@@ -41,12 +50,12 @@ export function formatDateTime(date: Date | string): string {
   })
 }
 
-export function getWeekStartString(date: Date = new Date()): string {
-  return formatDate(getWeekStart(date))
+export function getWeekStartString(date: Date = new Date(), firstDayOfWeek: number = 1): string {
+  return formatDate(getWeekStart(date, firstDayOfWeek))
 }
 
-export function getWeekEndString(date: Date = new Date()): string {
-  return formatDate(getWeekEnd(date))
+export function getWeekEndString(date: Date = new Date(), firstDayOfWeek: number = 1): string {
+  return formatDate(getWeekEnd(date, firstDayOfWeek))
 }
 
 export function isNewWeek(currentWeekStart: string, previousWeekStart: string | null): boolean {
@@ -54,8 +63,8 @@ export function isNewWeek(currentWeekStart: string, previousWeekStart: string | 
   return currentWeekStart !== previousWeekStart
 }
 
-export function getDaysRemainingInWeek(date: Date = new Date()): number {
-  const weekEnd = getWeekEnd(date)
+export function getDaysRemainingInWeek(date: Date = new Date(), firstDayOfWeek: number = 1): number {
+  const weekEnd = getWeekEnd(date, firstDayOfWeek)
   const today = new Date()
   today.setHours(0, 0, 0, 0)
   const diffTime = weekEnd.getTime() - today.getTime()
@@ -80,9 +89,9 @@ export function addDays(date: Date | string, days: number): Date {
   return result
 }
 
-export function isDateInWeek(date: Date | string, weekStart: string): boolean {
+export function isDateInWeek(date: Date | string, weekStart: string, firstDayOfWeek: number = 1): boolean {
   const d = typeof date === 'string' ? new Date(date) : date
   const weekStartDate = new Date(weekStart)
-  const weekEndDate = getWeekEnd(weekStartDate)
+  const weekEndDate = getWeekEnd(weekStartDate, firstDayOfWeek)
   return d >= weekStartDate && d <= weekEndDate
 }

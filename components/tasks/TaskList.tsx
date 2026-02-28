@@ -7,7 +7,7 @@ type TaskListProps = {
   tasks: Task[]
   completions: Map<string, { completed: boolean; completedAt?: string; status?: 'pending' | 'validated' }>
   today?: string
-  onComplete: (taskId: string) => void
+  onComplete?: (taskId: string) => void
   onSwap?: (taskId: string) => void
   swaps?: Map<string, { isSwapped: boolean; swapType?: 'temporary' | 'permanent' }>
   loading?: string | null
@@ -38,7 +38,7 @@ export default function TaskList({
               completed={completion.completed}
               completedAt={completion.completedAt}
               completionStatus={completion.status}
-              onComplete={() => onComplete(task.id)}
+              onComplete={onComplete ? () => onComplete(task.id) : undefined}
               onSwap={onSwap ? () => onSwap(task.id) : undefined}
               isSwapped={swap.isSwapped}
               swapType={swap.swapType}

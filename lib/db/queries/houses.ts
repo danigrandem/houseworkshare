@@ -123,6 +123,15 @@ export async function getCurrentUserHouse(userId: string): Promise<HouseWithMemb
   }
 }
 
+export async function updateHouseWeekStartDay(houseId: string, weekStartDay: number): Promise<void> {
+  const supabase = await createClient()
+  const { error } = await supabase
+    .from('houses')
+    .update({ week_start_day: weekStartDay })
+    .eq('id', houseId)
+  if (error) throw error
+}
+
 export async function setCurrentHouse(userId: string, houseId: string): Promise<void> {
   const supabase = await createClient()
   

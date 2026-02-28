@@ -130,6 +130,23 @@ export async function createWeeklyAssignment(
   return data
 }
 
+export async function clearWeeklyAssignment(
+  userId: string,
+  weekStartDate: string
+): Promise<void> {
+  const supabase = await createClient()
+  const houseId = await requireHouseId(userId)
+
+  const { error } = await supabase
+    .from('weekly_assignments')
+    .update({ task_group_id: null })
+    .eq('user_id', userId)
+    .eq('week_start_date', weekStartDate)
+    .eq('house_id', houseId)
+
+  if (error) throw error
+}
+
 export async function getAllWeeklyAssignments(
   weekStartDate: string,
   userId: string

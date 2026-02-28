@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
+import { getCurrentUserHouse } from '@/lib/db/queries/houses'
 import { getAllWeeklyScores } from '@/lib/db/queries/weekly'
 import { getCompletionsByWeek } from '@/lib/db/queries/completions'
 import HistoryClient from '@/components/history/HistoryClient'
@@ -14,12 +15,16 @@ export default async function HistoryPage() {
   if (!user) {
     redirect('/login')
   }
-  console.log("amor2")
-  const currentWeek = getWeekStartString()
+
+  const house = await getCurrentUserHouse(user.id)
+  if (!house) redirect('/setup-house')
+
+  const firstDayOfWeek = house.week_start_day ?? 1
+  const currentWeek = getWeekStartString(undefined, firstDayOfWeek)
   const weeks = []
 
   for (let i = 1; i <= 8; i++) {
-    const weekDate = getWeekStartString(addDays(new Date(currentWeek), -7 * i))
+    const weekDate = getWeekStartString(addDays(new Date(currentWeek), -7 * i), firstDayOfWeek)
     weeks.push(weekDate)
   }
 

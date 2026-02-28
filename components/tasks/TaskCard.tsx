@@ -8,7 +8,7 @@ type TaskCardProps = {
   completed: boolean
   completedAt?: string
   completionStatus?: 'pending' | 'validated'
-  onComplete: () => void
+  onComplete?: () => void
   onSwap?: () => void
   isSwapped?: boolean
   swapType?: 'temporary' | 'permanent'
@@ -47,25 +47,27 @@ export default function TaskCard({
             </span>
           )}
         </div>
-        <div className="flex gap-2">
-          {onSwap && !completed && (
-            <button
-              onClick={onSwap}
-              className="px-3 py-1 text-sm font-medium text-blue-600 hover:text-blue-800"
-            >
-              Intercambiar
-            </button>
-          )}
-          {!completed && (
-            <button
-              onClick={onComplete}
-              disabled={loading}
-              className="px-4 py-2 text-sm font-medium text-white bg-green-600 rounded hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {loading ? 'Completando...' : 'Completar'}
-            </button>
-          )}
-        </div>
+        {(onComplete || onSwap) && (
+          <div className="flex gap-2">
+            {onSwap && !completed && (
+              <button
+                onClick={onSwap}
+                className="px-3 py-1 text-sm font-medium text-blue-600 hover:text-blue-800"
+              >
+                Intercambiar
+              </button>
+            )}
+            {onComplete && !completed && (
+              <button
+                onClick={onComplete}
+                disabled={loading}
+                className="px-4 py-2 text-sm font-medium text-white bg-green-600 rounded hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {loading ? 'Completando...' : 'Completar'}
+              </button>
+            )}
+          </div>
+        )}
       </div>
     </div>
   )

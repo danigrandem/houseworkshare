@@ -8,7 +8,7 @@ import {
   getWeeklyConfig,
   getAllUsers,
 } from '@/lib/db/queries/weekly'
-import { getCompletionsByUserAndWeek, getPendingCompletionsToValidate } from '@/lib/db/queries/completions'
+import { getCompletionsByUserAndWeek, getCompletionsByWeek, getPendingCompletionsToValidate } from '@/lib/db/queries/completions'
 import { getPendingSwapsForUser, getActiveSwapForTask } from '@/lib/db/queries/swaps'
 import DashboardClient from '@/components/dashboard/DashboardClient'
 
@@ -27,8 +27,9 @@ export default async function DashboardPage() {
     redirect('/setup-house')
   }
 
-  const weekStartDate = getWeekStartString()
-  const [assignment, weeklyScore, weeklyConfig, completions, pendingCompletionsToValidate, pendingSwaps, users] = await Promise.all([
+  const firstDayOfWeek = currentHouse.week_start_day ?? 1
+  const weekStartDate = getWeekStartString(undefined, firstDayOfWeek)
+  const [assignment, weeklyScore, weeklyConfig, completions, pendingCompletionsToValidate, pendingSwaps, users, allCompletions] = await Promise.all([
     getWeeklyAssignment(user.id, weekStartDate),
     getWeeklyScore(user.id, weekStartDate),
     getWeeklyConfig(weekStartDate, user.id),
@@ -36,7 +37,15 @@ export default async function DashboardPage() {
     getPendingCompletionsToValidate(weekStartDate, user.id),
     getPendingSwapsForUser(user.id),
     getAllUsers(user.id),
+    getCompletionsByWeek(weekStartDate, user.id),
   ])
+  const membersAssignments = await Promise.all(
+    users.map((u) => getWeeklyAssignment(u.id, weekStartDate))
+  )
+  const membersWithAssignments = users.map((u, i) => ({
+    user: u,
+    assignment: membersAssignments[i],
+  }))
 
   const pointsTarget = weeklyConfig?.points_target_per_person || 50
   const pointsEarned = weeklyScore?.points_earned || 0
@@ -75,6 +84,8 @@ export default async function DashboardPage() {
       pendingSwaps={pendingSwaps}
       swaps={swapsMap}
       users={users}
+      membersWithAssignments={membersWithAssignments}
+      allCompletions={allCompletions}
     />
   )
 }

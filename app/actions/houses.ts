@@ -7,6 +7,7 @@ import {
   createHouseInvitation,
   getCurrentUserHouse,
   getPendingInvitationsForEmail,
+  updateHouseWeekStartDay as updateHouseWeekStartDayQuery,
 } from '@/lib/db/queries/houses'
 
 export async function createHouse(name: string, userId: string) {
@@ -72,4 +73,33 @@ export async function getPendingInvitations(email: string) {
   }
 
   return await getPendingInvitationsForEmail(email)
+}
+
+export async function updateHouseWeekStartDay(houseId: string, weekStartDay: number) {
+  const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  if (!user) {
+    throw new Error('Unauthorized')
+  }
+
+  const house = await getCurrentUserHouse(user.id)
+  if (!house || house.id !== houseId) {
+    throw new Error('No puedes modificar esta casa')
+  }
+
+  const isOwner = house.members.some(
+    (m) => m.user_id === user.id && m.role === 'owner'
+  )
+  if (!isOwner) {
+    throw new Error('Solo el dueño puede cambiar el día de inicio de semana')
+  }
+
+  if (weekStartDay < 0 || weekStartDay > 6) {
+    throw new Error('Día no válido')
+  }
+
+  await updateHouseWeekStartDayQuery(houseId, weekStartDay)
 }

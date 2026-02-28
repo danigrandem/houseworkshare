@@ -17,6 +17,8 @@ export type House = {
   created_by: string
   created_at: string
   updated_at: string
+  /** First day of week: 0 = Sunday, 1 = Monday, ... 6 = Saturday */
+  week_start_day?: number
 }
 
 export type HouseMember = {

@@ -6,13 +6,19 @@ import type {
   WeeklyAssignmentWithGroup,
   TaskCompletionWithTask,
   TaskSwapWithTask,
+  User,
 } from '@/lib/db/schema'
 import TaskList from '@/components/tasks/TaskList'
 import SwapNotification from '@/components/tasks/SwapNotification'
 import SwapRequest from '@/components/tasks/SwapRequest'
 import { getDaysRemainingInWeek, formatDateForDisplay } from '@/lib/utils/date'
-import { createTaskCompletion, validateTaskCompletion } from '@/app/actions'
+import { createTaskCompletion, validateTaskCompletion, clearMyAssignment } from '@/app/actions'
 import type { CompletionStatus } from '@/lib/db/schema'
+
+type MemberWithAssignment = {
+  user: User
+  assignment: WeeklyAssignmentWithGroup | null
+}
 
 type DashboardClientProps = {
   assignment: WeeklyAssignmentWithGroup | null
@@ -25,7 +31,9 @@ type DashboardClientProps = {
   weekStartDate: string
   pendingSwaps: TaskSwapWithTask[]
   swaps: Map<string, { isSwapped: boolean; swapType?: 'temporary' | 'permanent' }>
-  users: any[]
+  users: User[]
+  membersWithAssignments: MemberWithAssignment[]
+  allCompletions: TaskCompletionWithTask[]
 }
 
 export default function DashboardClient({
@@ -40,12 +48,15 @@ export default function DashboardClient({
   pendingSwaps,
   swaps,
   users,
+  membersWithAssignments,
+  allCompletions,
 }: DashboardClientProps) {
   const router = useRouter()
   const [loading, setLoading] = useState<string | null>(null)
   const [validatingId, setValidatingId] = useState<string | null>(null)
   const [showSwapRequest, setShowSwapRequest] = useState(false)
   const [selectedTask, setSelectedTask] = useState<{ id: string; name: string } | null>(null)
+  const [clearingAssignment, setClearingAssignment] = useState(false)
 
   const tasks = assignment?.task_group?.tasks || []
   const completionsMap = new Map(
@@ -86,6 +97,19 @@ export default function DashboardClient({
 
   const handleSwapSuccess = () => {
     router.refresh()
+  }
+
+  const handleClearAssignment = async () => {
+    if (!confirm('¿Quitar tu grupo asignado esta semana? No podrás completar tareas hasta que te asignen de nuevo.')) return
+    setClearingAssignment(true)
+    try {
+      await clearMyAssignment()
+      router.refresh()
+    } catch (err) {
+      console.error('Error al quitar asignación:', err)
+    } finally {
+      setClearingAssignment(false)
+    }
   }
 
   const handleValidate = async (completionId: string) => {
@@ -182,9 +206,19 @@ export default function DashboardClient({
 
         {assignment?.task_group ? (
           <div>
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">
-              Grupo: {assignment.task_group.name}
-            </h2>
+            <div className="flex flex-wrap items-center justify-between gap-4 mb-4">
+              <h2 className="text-xl font-semibold text-gray-900">
+                Mis tareas — Grupo: {assignment.task_group.name}
+              </h2>
+              <button
+                type="button"
+                onClick={handleClearAssignment}
+                disabled={clearingAssignment}
+                className="text-sm text-amber-700 hover:text-amber-800 underline disabled:opacity-50"
+              >
+                {clearingAssignment ? 'Quitando...' : 'Quitar mi grupo esta semana'}
+              </button>
+            </div>
             <TaskList
               tasks={tasks}
               completions={completionsMap}
@@ -200,6 +234,65 @@ export default function DashboardClient({
             <p className="text-yellow-800">
               No tienes un grupo asignado para esta semana.
             </p>
+          </div>
+        )}
+
+        {membersWithAssignments.filter((m) => m.user.id !== userId).length > 0 && (
+          <div className="mt-8">
+            <h2 className="text-xl font-semibold text-gray-900 mb-4">
+              Tareas del resto del hogar
+            </h2>
+            <div className="space-y-6">
+              {membersWithAssignments
+                .filter((m) => m.user.id !== userId)
+                .map(({ user: member, assignment: memberAssignment }) => {
+                  const memberCompletions = allCompletions.filter((c) => c.user_id === member.id)
+                  const memberCompletionsMap = new Map(
+                    memberCompletions.map((c) => {
+                      const key =
+                        c.task?.frequency === 'daily'
+                          ? `${c.task_id}_${c.completion_date || ''}`
+                          : c.task_id
+                      return [
+                        key,
+                        {
+                          completed: true,
+                          completedAt: c.completed_at,
+                          status: c.status as CompletionStatus,
+                        },
+                      ]
+                    })
+                  )
+                  const memberTasks = memberAssignment?.task_group?.tasks || []
+                  const memberName = member.name || member.email || 'Miembro'
+                  return (
+                    <div
+                      key={member.id}
+                      className="bg-white rounded-lg shadow p-4 border border-gray-200"
+                    >
+                      <h3 className="text-lg font-medium text-gray-800 mb-2">
+                        {memberName}
+                        {memberAssignment?.task_group && (
+                          <span className="text-gray-500 font-normal">
+                            {' '}
+                            — {memberAssignment.task_group.name}
+                          </span>
+                        )}
+                      </h3>
+                      {memberTasks.length > 0 ? (
+                        <TaskList
+                          tasks={memberTasks}
+                          completions={memberCompletionsMap}
+                          today={today}
+                          swaps={new Map()}
+                        />
+                      ) : (
+                        <p className="text-gray-500 text-sm">Sin grupo asignado esta semana.</p>
+                      )}
+                    </div>
+                  )
+                })}
+            </div>
           </div>
         )}
 

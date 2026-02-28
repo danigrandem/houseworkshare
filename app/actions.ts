@@ -9,7 +9,10 @@ import {
 import { getTaskById } from '@/lib/db/queries/tasks'
 import {
   updateWeeklyScorePoints,
+  clearWeeklyAssignment,
 } from '@/lib/db/queries/weekly'
+import { getCurrentUserHouse } from '@/lib/db/queries/houses'
+import { getWeekStartString } from '@/lib/utils/date'
 
 function todayISO(): string {
   return new Date().toISOString().slice(0, 10)
@@ -65,4 +68,19 @@ export async function validateTaskCompletion(completionId: string) {
     .filter((c) => c.status === 'validated')
     .reduce((sum, c) => sum + c.points_earned, 0)
   await updateWeeklyScorePoints(completion.user_id, completion.week_start_date, totalPoints)
+}
+
+export async function clearMyAssignment() {
+  const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  if (!user) throw new Error('No autorizado')
+
+  const house = await getCurrentUserHouse(user.id)
+  if (!house) throw new Error('Casa no encontrada')
+
+  const firstDayOfWeek = house.week_start_day ?? 1
+  const weekStartDate = getWeekStartString(undefined, firstDayOfWeek)
+  await clearWeeklyAssignment(user.id, weekStartDate)
 }

@@ -49,7 +49,7 @@ export default function GroupsList({ groups: initialGroups }: GroupsListProps) {
           ) : (
             groups.map((group) => (
               <div key={group.id} className="bg-white rounded-lg shadow p-6">
-                <div className="flex justify-between items-start">
+                <div className="flex justify-between items-start flex-col xl:flex-row gap-4">
                   <div>
                     <h2 className="text-xl font-semibold text-gray-900">{group.name}</h2>
                     <p className="text-sm text-gray-500 mt-1">
@@ -59,7 +59,7 @@ export default function GroupsList({ groups: initialGroups }: GroupsListProps) {
                   <div className="flex gap-2">
                     <Link
                       href={`/groups/${group.id}/edit`}
-                      className="px-3 py-1 text-sm font-medium text-celeste-600 hover:text-celeste-800"
+                      className="py-1 text-sm font-medium text-celeste-600 hover:text-celeste-800"
                     >
                       Editar
                     </Link>

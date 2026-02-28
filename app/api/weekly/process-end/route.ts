@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { getCurrentUserHouse } from '@/lib/db/queries/houses'
 import { processWeekEnd } from '@/lib/utils/weekly-scores'
 import { getWeeklyConfig } from '@/lib/db/queries/weekly'
 import { getWeekStartString } from '@/lib/utils/date'
@@ -15,8 +16,10 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    const house = await getCurrentUserHouse(user.id)
+    const firstDayOfWeek = house?.week_start_day ?? 1
     const { weekStartDate } = await request.json().catch(() => ({}))
-    const targetWeek = weekStartDate || getWeekStartString()
+    const targetWeek = weekStartDate || getWeekStartString(undefined, firstDayOfWeek)
     
     const config = await getWeeklyConfig(targetWeek, user.id)
     const baseTarget = config?.points_target_per_person || 50
