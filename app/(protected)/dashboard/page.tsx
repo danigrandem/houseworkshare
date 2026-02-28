@@ -1,13 +1,15 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { getCurrentUserHouse } from '@/lib/db/queries/houses'
-import { getWeekStartString } from '@/lib/utils/date'
+import { getWeekStartString, addDays } from '@/lib/utils/date'
 import {
   getWeeklyAssignment,
   getWeeklyScore,
   getWeeklyConfig,
   getAllUsers,
+  getAllWeeklyScores,
 } from '@/lib/db/queries/weekly'
+import { processWeekEnd } from '@/lib/utils/weekly-scores'
 import { getCompletionsByUserAndWeek, getCompletionsByWeek, getPendingCompletionsToValidate } from '@/lib/db/queries/completions'
 import { getPendingSwapsForUser, getActiveSwapForTask } from '@/lib/db/queries/swaps'
 import DashboardClient from '@/components/dashboard/DashboardClient'
@@ -29,6 +31,18 @@ export default async function DashboardPage() {
 
   const firstDayOfWeek = currentHouse.week_start_day ?? 1
   const weekStartDate = getWeekStartString(undefined, firstDayOfWeek)
+  const previousWeekStart = getWeekStartString(addDays(new Date(weekStartDate), -7), firstDayOfWeek)
+
+  const [currentWeekScores, previousWeekScores, previousWeekConfig] = await Promise.all([
+    getAllWeeklyScores(weekStartDate, user.id),
+    getAllWeeklyScores(previousWeekStart, user.id),
+    getWeeklyConfig(previousWeekStart, user.id),
+  ])
+  if (currentWeekScores.length === 0 && previousWeekScores.length > 0) {
+    const baseTarget = previousWeekConfig?.points_target_per_person ?? 50
+    await processWeekEnd(previousWeekStart, baseTarget, user.id)
+  }
+
   const [assignment, weeklyScore, weeklyConfig, completions, pendingCompletionsToValidate, pendingSwaps, users, allCompletions] = await Promise.all([
     getWeeklyAssignment(user.id, weekStartDate),
     getWeeklyScore(user.id, weekStartDate),
