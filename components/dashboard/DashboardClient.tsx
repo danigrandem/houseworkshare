@@ -27,6 +27,8 @@ type DashboardClientProps = {
   pointsEarned: number
   completions: TaskCompletionWithTask[]
   pendingCompletionsToValidate: TaskCompletionWithTask[]
+  /** Para mostrar progress bar en pendientes: key = `${user_id}_${task_id}` */
+  pendingProgressByKey?: Record<string, { count: number; min: number }>
   today: string
   userId: string
   weekStartDate: string
@@ -46,6 +48,7 @@ export default function DashboardClient({
   pointsEarned,
   completions,
   pendingCompletionsToValidate,
+  pendingProgressByKey = {},
   today,
   userId,
   weekStartDate,
@@ -274,34 +277,54 @@ export default function DashboardClient({
               Otros han marcado estas tareas como hechas. Valida para que cuenten los puntos.
             </p>
             <ul className="space-y-2">
-              {pendingCompletionsToValidate.map((c) => (
-                <li
-                  key={c.id}
-                  className="flex items-center justify-between gap-4 py-2 border-b border-amber-100 last:border-0"
-                >
-                  <span className="text-gray-900">
-                    <strong>{c.task?.name}</strong>
-                  </span>
-                  <div className="flex gap-2">
-                    <button
-                      type="button"
-                      onClick={() => handleValidate(c.id)}
-                      disabled={validatingId === c.id || discardingId === c.id}
-                      className="px-3 py-1.5 text-sm font-medium text-white bg-celeste-600 rounded hover:bg-celeste-700 disabled:opacity-50"
-                    >
-                      {validatingId === c.id ? 'Validando...' : 'Validar'}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleDiscard(c.id)}
-                      disabled={validatingId === c.id || discardingId === c.id}
-                      className="px-3 py-1.5 text-sm font-medium text-gray-700 bg-gray-200 rounded hover:bg-gray-300 disabled:opacity-50"
-                    >
-                      {discardingId === c.id ? 'Descartando...' : 'Descartar'}
-                    </button>
-                  </div>
-                </li>
-              ))}
+              {pendingCompletionsToValidate.map((c) => {
+                const min = c.task?.frequency === 'weekly' ? (c.task?.weekly_minimum ?? 1) : 0
+                const showProgress = c.task?.frequency === 'weekly' && min > 1
+                const progress = showProgress ? pendingProgressByKey[`${c.user_id}_${c.task_id}`] : null
+                return (
+                  <li
+                    key={c.id}
+                    className="flex flex-col gap-1 py-2 border-b border-amber-100 last:border-0"
+                  >
+                    <div className="flex items-center justify-between gap-4">
+                      <span className="text-gray-900">
+                        <strong>{c.task?.name}</strong>
+                      </span>
+                      <div className="flex gap-2">
+                        <button
+                          type="button"
+                          onClick={() => handleValidate(c.id)}
+                          disabled={validatingId === c.id || discardingId === c.id}
+                          className="px-3 py-1.5 text-sm font-medium text-white bg-celeste-600 rounded hover:bg-celeste-700 disabled:opacity-50"
+                        >
+                          {validatingId === c.id ? 'Validando...' : 'Validar'}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleDiscard(c.id)}
+                          disabled={validatingId === c.id || discardingId === c.id}
+                          className="px-3 py-1.5 text-sm font-medium text-gray-700 bg-gray-200 rounded hover:bg-gray-300 disabled:opacity-50"
+                        >
+                          {discardingId === c.id ? 'Descartando...' : 'Descartar'}
+                        </button>
+                      </div>
+                    </div>
+                    {showProgress && progress && (
+                      <div className="flex items-center gap-2">
+                        <div className="flex-1 max-w-[120px] bg-gray-200 rounded-full h-1.5">
+                          <div
+                            className={`h-1.5 rounded-full ${progress.count >= progress.min ? 'bg-green-600' : 'bg-amber-500'}`}
+                            style={{ width: `${Math.min(100, (progress.count / progress.min) * 100)}%` }}
+                          />
+                        </div>
+                        <span className="text-xs text-gray-500">
+                          {progress.count}/{progress.min} realizaciones
+                        </span>
+                      </div>
+                    )}
+                  </li>
+                );
+              })}
             </ul>
           </div>
         )}

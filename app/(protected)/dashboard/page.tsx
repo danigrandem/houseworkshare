@@ -88,6 +88,24 @@ export default async function DashboardPage() {
       ])
   )
 
+  const distinctUserIds = [...new Set(pendingCompletionsToValidate.map((c) => c.user_id))]
+  const userCompletionsForProgress = await Promise.all(
+    distinctUserIds.map((uid) => getCompletionsByUserAndWeek(uid, weekStartDate))
+  )
+  const pendingProgressByKey: Record<string, { count: number; min: number }> = {}
+  distinctUserIds.forEach((uid, i) => {
+    const comps = userCompletionsForProgress[i]
+    const byTask = new Map<string, number>()
+    comps.forEach((c) => byTask.set(c.task_id, (byTask.get(c.task_id) || 0) + 1))
+    byTask.forEach((count, taskId) => {
+      const pending = pendingCompletionsToValidate.find((p) => p.user_id === uid && p.task_id === taskId)
+      const min = (pending?.task?.weekly_minimum ?? 1) as number
+      if (pending?.task?.frequency === 'weekly' && min > 1) {
+        pendingProgressByKey[`${uid}_${taskId}`] = { count, min }
+      }
+    })
+  })
+
   return (
     <DashboardClient
       assignment={assignment}
@@ -95,6 +113,7 @@ export default async function DashboardPage() {
       pointsEarned={pointsEarned}
       completions={completions}
       pendingCompletionsToValidate={pendingCompletionsToValidate}
+      pendingProgressByKey={pendingProgressByKey}
       today={today}
       userId={user.id}
       weekStartDate={weekStartDate}

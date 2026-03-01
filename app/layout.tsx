@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import PageVisibilityRefresh from "@/components/PageVisibilityRefresh";
 
 export const metadata: Metadata = {
   title: "House Work Share",
@@ -23,7 +24,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="es">
-      <body>{children}</body>
+      <body>
+        {children}
+        <PageVisibilityRefresh />
+      </body>
     </html>
   );
 }
