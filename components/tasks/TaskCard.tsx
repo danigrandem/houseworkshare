@@ -39,8 +39,8 @@ export default function TaskCard({
 
   return (
     <div className="bg-white rounded-lg shadow p-4 border border-gray-200">
-      <div className="flex items-start justify-between">
-        <div className="flex-1">
+      <div className="flex items-start justify-between flex-col xl:flex-row gap-4">
+        <div className="flex-1 w-full">
           <div className="flex items-center gap-2 flex-wrap">
             <h3 className="text-lg font-semibold text-gray-900">{task.name}</h3>
             <TaskFrequencyTag frequency={task.frequency} />
@@ -55,7 +55,7 @@ export default function TaskCard({
             )}
           </p>
           {min > 1 && (
-            <div className="mt-1 w-full bg-gray-200 rounded-full h-1.5 max-w-[120px]">
+            <div className="mt-1 w-full bg-gray-200 rounded-full h-1.5 xl:max-w-[120px]">
               <div
                 className={`h-1.5 rounded-full ${progressReached ? 'bg-green-600' : 'bg-amber-500'}`}
                 style={{ width: `${Math.min(100, (weeklyCompletionCount ?? 0) / min * 100)}%` }}
