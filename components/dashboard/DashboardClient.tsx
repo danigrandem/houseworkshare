@@ -13,7 +13,7 @@ import TaskList from '@/components/tasks/TaskList'
 import SwapNotification from '@/components/tasks/SwapNotification'
 import SwapRequest from '@/components/tasks/SwapRequest'
 import { getDaysRemainingInWeek, formatDateForDisplay } from '@/lib/utils/date'
-import { createTaskCompletion, deleteMyLastCompletion, deleteLastTaskCompletion, validateTaskCompletion, clearMyAssignment, createExtraCompletionAction, validateExtraCompletionAction } from '@/app/actions'
+import { createTaskCompletion, deleteMyLastCompletion, deleteLastTaskCompletion, validateTaskCompletion, discardTaskCompletion, clearMyAssignment, createExtraCompletionAction, validateExtraCompletionAction } from '@/app/actions'
 import type { CompletionStatus } from '@/lib/db/schema'
 
 type MemberWithAssignment = {
@@ -61,6 +61,7 @@ export default function DashboardClient({
   const router = useRouter()
   const [loading, setLoading] = useState<string | null>(null)
   const [validatingId, setValidatingId] = useState<string | null>(null)
+  const [discardingId, setDiscardingId] = useState<string | null>(null)
   const [validatingExtraId, setValidatingExtraId] = useState<string | null>(null)
   const [showSwapRequest, setShowSwapRequest] = useState(false)
   const [selectedTask, setSelectedTask] = useState<{ id: string; name: string } | null>(null)
@@ -166,6 +167,19 @@ export default function DashboardClient({
     }
   }
 
+  const handleDiscard = async (completionId: string) => {
+    if (!confirm('¿Descartar esta realización? Quedará eliminada y la persona podrá volver a marcarla.')) return
+    setDiscardingId(completionId)
+    try {
+      await discardTaskCompletion(completionId)
+      router.refresh()
+    } catch (err) {
+      console.error('Error descartando:', err)
+    } finally {
+      setDiscardingId(null)
+    }
+  }
+
   const handleValidateExtra = async (completionId: string) => {
     setValidatingExtraId(completionId)
     try {
@@ -268,14 +282,24 @@ export default function DashboardClient({
                   <span className="text-gray-900">
                     <strong>{c.task?.name}</strong>
                   </span>
-                  <button
-                    type="button"
-                    onClick={() => handleValidate(c.id)}
-                    disabled={validatingId === c.id}
-                    className="px-3 py-1.5 text-sm font-medium text-white bg-celeste-600 rounded hover:bg-celeste-700 disabled:opacity-50"
-                  >
-                    {validatingId === c.id ? 'Validando...' : 'Validar'}
-                  </button>
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      onClick={() => handleValidate(c.id)}
+                      disabled={validatingId === c.id || discardingId === c.id}
+                      className="px-3 py-1.5 text-sm font-medium text-white bg-celeste-600 rounded hover:bg-celeste-700 disabled:opacity-50"
+                    >
+                      {validatingId === c.id ? 'Validando...' : 'Validar'}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleDiscard(c.id)}
+                      disabled={validatingId === c.id || discardingId === c.id}
+                      className="px-3 py-1.5 text-sm font-medium text-gray-700 bg-gray-200 rounded hover:bg-gray-300 disabled:opacity-50"
+                    >
+                      {discardingId === c.id ? 'Descartando...' : 'Descartar'}
+                    </button>
+                  </div>
                 </li>
               ))}
             </ul>

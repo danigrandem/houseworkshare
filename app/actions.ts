@@ -14,6 +14,7 @@ import {
 } from '@/lib/db/queries/weekly'
 import { calculateEffectivePointsForWeek } from '@/lib/utils/points'
 import { getCurrentUserHouse } from '@/lib/db/queries/houses'
+import { requireHouseId } from '@/lib/db/queries/house-utils'
 import { getWeekStartString } from '@/lib/utils/date'
 
 function todayISO(): string {
@@ -102,6 +103,32 @@ export async function validateTaskCompletion(completionId: string) {
 
   await validateCompletionQuery(completionId, user.id)
 
+  const totalPoints = await calculateEffectivePointsForWeek(completion.user_id, completion.week_start_date)
+  await updateWeeklyScorePoints(completion.user_id, completion.week_start_date, totalPoints)
+}
+
+/** Descartar una realización pendiente de validar (la elimina; quien la marcó puede volver a marcarla). */
+export async function discardTaskCompletion(completionId: string) {
+  const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  if (!user) throw new Error('No autorizado')
+
+  const { data: completion, error: fetchError } = await supabase
+    .from('task_completions')
+    .select('id, user_id, week_start_date, status, house_id')
+    .eq('id', completionId)
+    .single()
+
+  if (fetchError || !completion) throw new Error('Completado no encontrado')
+  if (completion.user_id === user.id) throw new Error('No puedes descartar tu propio completado')
+  if (completion.status !== 'pending') throw new Error('Solo se pueden descartar realizaciones pendientes')
+
+  const houseId = await requireHouseId(user.id)
+  if (completion.house_id !== houseId) throw new Error('No autorizado')
+
+  await deleteTaskCompletionQuery(completionId)
   const totalPoints = await calculateEffectivePointsForWeek(completion.user_id, completion.week_start_date)
   await updateWeeklyScorePoints(completion.user_id, completion.week_start_date, totalPoints)
 }
