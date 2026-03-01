@@ -33,6 +33,7 @@ export async function assignGroupsThisWeek() {
   const house = await getCurrentUserHouse(user.id)
   if (!house) throw new Error('No tienes una casa asignada')
   const firstDay = house.week_start_day ?? 1
+  const rotationWeeks = house.rotation_weeks ?? 1
   const weekStartDate = getWeekStartString(undefined, firstDay)
-  await rotateWeeklyAssignments(user.id, weekStartDate, firstDay)
+  await rotateWeeklyAssignments(user.id, weekStartDate, firstDay, rotationWeeks)
 }

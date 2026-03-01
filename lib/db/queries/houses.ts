@@ -132,6 +132,15 @@ export async function updateHouseWeekStartDay(houseId: string, weekStartDay: num
   if (error) throw error
 }
 
+export async function updateHouseRotationWeeks(houseId: string, rotationWeeks: number): Promise<void> {
+  const supabase = await createClient()
+  const { error } = await supabase
+    .from('houses')
+    .update({ rotation_weeks: rotationWeeks })
+    .eq('id', houseId)
+  if (error) throw error
+}
+
 export async function setCurrentHouse(userId: string, houseId: string): Promise<void> {
   const supabase = await createClient()
   

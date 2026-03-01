@@ -1,13 +1,14 @@
 import { getAllGroups } from '@/lib/db/queries/groups'
 import { getAllUsers, getAllWeeklyAssignments, createWeeklyAssignment } from '@/lib/db/queries/weekly'
-import { getWeekStartString } from './date'
+import { getWeekStartString, addDays } from './date'
 import type { TaskGroup, User } from '@/lib/db/schema'
 import { requireHouseId } from '@/lib/db/queries/house-utils'
 
 export async function rotateWeeklyAssignments(
   userId: string,
   weekStartDate?: string,
-  firstDayOfWeek: number = 1
+  firstDayOfWeek: number = 1,
+  rotationWeeks: number = 1
 ) {
   const targetWeek = weekStartDate || getWeekStartString(undefined, firstDayOfWeek)
   const houseId = await requireHouseId(userId)
@@ -29,8 +30,8 @@ export async function rotateWeeklyAssignments(
     existingAssignments.map((a) => [a.user_id, a.task_group_id])
   )
 
-  const previousWeek = new Date(targetWeek)
-  previousWeek.setDate(previousWeek.getDate() - 7)
+  const weeksBack = Math.max(1, rotationWeeks)
+  const previousWeek = addDays(new Date(targetWeek), -7 * weeksBack)
   const previousWeekStart = getWeekStartString(previousWeek, firstDayOfWeek)
   const previousAssignments = await getAllWeeklyAssignments(previousWeekStart, userId)
   const previousMap = new Map(

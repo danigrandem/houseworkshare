@@ -8,6 +8,7 @@ import {
   getCurrentUserHouse,
   getPendingInvitationsForEmail,
   updateHouseWeekStartDay as updateHouseWeekStartDayQuery,
+  updateHouseRotationWeeks as updateHouseRotationWeeksQuery,
 } from '@/lib/db/queries/houses'
 
 export async function createHouse(name: string, userId: string) {
@@ -102,4 +103,33 @@ export async function updateHouseWeekStartDay(houseId: string, weekStartDay: num
   }
 
   await updateHouseWeekStartDayQuery(houseId, weekStartDay)
+}
+
+export async function updateHouseRotationWeeks(houseId: string, rotationWeeks: number) {
+  const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  if (!user) {
+    throw new Error('No autorizado')
+  }
+
+  const house = await getCurrentUserHouse(user.id)
+  if (!house || house.id !== houseId) {
+    throw new Error('No puedes modificar esta casa')
+  }
+
+  const isOwner = house.members.some(
+    (m) => m.user_id === user.id && m.role === 'owner'
+  )
+  if (!isOwner) {
+    throw new Error('Solo el dueño puede cambiar la rotación de grupos')
+  }
+
+  if (rotationWeeks < 1 || rotationWeeks > 12) {
+    throw new Error('El intervalo debe estar entre 1 y 12 semanas')
+  }
+
+  await updateHouseRotationWeeksQuery(houseId, rotationWeeks)
 }

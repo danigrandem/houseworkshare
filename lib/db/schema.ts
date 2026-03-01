@@ -19,6 +19,8 @@ export type House = {
   updated_at: string
   /** First day of week: 0 = Sunday, 1 = Monday, ... 6 = Saturday */
   week_start_day?: number
+  /** Rotate task group every N weeks (1 = every week, 2 = every 2 weeks, ...) */
+  rotation_weeks?: number
 }
 
 export type HouseMember = {

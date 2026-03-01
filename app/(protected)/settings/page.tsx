@@ -28,6 +28,7 @@ export default async function SettingsPage() {
       weekStartDate={weekStartDate}
       currentPointsTarget={config?.points_target_per_person || 50}
       weekStartDay={firstDayOfWeek}
+      rotationWeeks={house.rotation_weeks ?? 1}
       isOwner={house.members.some((m) => m.user_id === user.id && m.role === 'owner')}
     />
   )

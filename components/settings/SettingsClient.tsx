@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { updateWeeklyConfig, assignGroupsThisWeek } from '@/app/actions/settings'
-import { updateHouseWeekStartDay } from '@/app/actions/houses'
+import { updateHouseWeekStartDay, updateHouseRotationWeeks } from '@/app/actions/houses'
 import { formatDateForDisplay } from '@/lib/utils/date'
 
 const WEEKDAY_OPTIONS: { value: number; label: string }[] = [
@@ -16,11 +16,14 @@ const WEEKDAY_OPTIONS: { value: number; label: string }[] = [
   { value: 6, label: 'Sábado' },
 ]
 
+const ROTATION_WEEKS_OPTIONS = [1, 2, 3, 4, 6, 8, 12] as const
+
 type SettingsClientProps = {
   houseId: string
   weekStartDate: string
   currentPointsTarget: number
   weekStartDay: number
+  rotationWeeks: number
   isOwner: boolean
 }
 
@@ -29,14 +32,17 @@ export default function SettingsClient({
   weekStartDate,
   currentPointsTarget,
   weekStartDay,
+  rotationWeeks,
   isOwner,
 }: SettingsClientProps) {
   const router = useRouter()
   const [pointsTarget, setPointsTarget] = useState(currentPointsTarget)
   const [weekStartDayState, setWeekStartDayState] = useState(weekStartDay)
+  const [rotationWeeksState, setRotationWeeksState] = useState(rotationWeeks)
   const [loading, setLoading] = useState(false)
   const [assigning, setAssigning] = useState(false)
   const [savingWeekDay, setSavingWeekDay] = useState(false)
+  const [savingRotation, setSavingRotation] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
   const [assignSuccess, setAssignSuccess] = useState(false)
@@ -86,6 +92,20 @@ export default function SettingsClient({
       setError(err instanceof Error ? err.message : 'Error al guardar')
     } finally {
       setSavingWeekDay(false)
+    }
+  }
+
+  const handleRotationWeeksChange = async (weeks: number) => {
+    setError(null)
+    setSavingRotation(true)
+    try {
+      await updateHouseRotationWeeks(houseId, weeks)
+      setRotationWeeksState(weeks)
+      setTimeout(() => router.refresh(), 500)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Error al guardar')
+    } finally {
+      setSavingRotation(false)
     }
   }
 
@@ -174,12 +194,40 @@ export default function SettingsClient({
           </div>
         )}
 
+        {isOwner && (
+          <div className="mt-8 bg-white rounded-lg shadow p-6">
+            <h2 className="text-xl font-semibold text-gray-900 mb-2">
+              Cambio de grupo cada...
+            </h2>
+            <p className="text-sm text-gray-600 mb-4">
+              Cada cuántas semanas se rota al siguiente grupo de tareas. Por ejemplo: cada 2 = mismo grupo 2 semanas, luego al siguiente.
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {ROTATION_WEEKS_OPTIONS.map((weeks) => (
+                <button
+                  key={weeks}
+                  type="button"
+                  onClick={() => handleRotationWeeksChange(weeks)}
+                  disabled={savingRotation}
+                  className={`px-3 py-1.5 rounded text-sm font-medium disabled:opacity-50 ${
+                    rotationWeeksState === weeks
+                      ? 'bg-celeste-600 text-white'
+                      : 'bg-gray-100 text-gray-900 hover:bg-gray-200'
+                  }`}
+                >
+                  {weeks} {weeks === 1 ? 'semana' : 'semanas'}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
         <div className="mt-8 bg-white rounded-lg shadow p-6">
           <h2 className="text-xl font-semibold text-gray-900 mb-2">
             Asignación de grupos
           </h2>
           <p className="text-sm text-gray-600 mb-4">
-            Asigna un grupo de tareas a cada miembro de la casa para esta semana. Si ya había asignaciones, se mantienen; solo se asignan quienes aún no tenían grupo.
+            Asigna un grupo de tareas a cada miembro de la casa para esta semana. Si ya había asignaciones, se mantienen; solo se asignan quienes aún no tenían grupo. La rotación al siguiente grupo depende de la opción &quot;Cambio de grupo cada...&quot;.
           </p>
           {assignSuccess && (
             <div className="mb-4 bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded text-sm">
