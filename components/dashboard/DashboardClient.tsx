@@ -266,7 +266,7 @@ export default function DashboardClient({
                   className="flex items-center justify-between gap-4 py-2 border-b border-amber-100 last:border-0"
                 >
                   <span className="text-gray-900">
-                    <strong>{c.task?.name}</strong> — {c.points_earned} pts
+                    <strong>{c.task?.name}</strong>
                   </span>
                   <button
                     type="button"
