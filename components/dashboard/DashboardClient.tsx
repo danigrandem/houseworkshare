@@ -247,83 +247,6 @@ export default function DashboardClient({
           </div>
         )}
 
-        {pendingExtraCompletions.length > 0 && (
-          <div className="mb-6 bg-amber-50 border border-amber-200 rounded-lg p-4">
-            <h2 className="text-lg font-semibold text-gray-900 mb-3">
-              Tareas unitarias extra pendientes de validar
-            </h2>
-            <p className="text-sm text-gray-600 mb-3">
-              Otros han añadido estas tareas extra. Valida para que cuenten los puntos.
-            </p>
-            <ul className="space-y-2">
-              {pendingExtraCompletions.map((e) => (
-                <li
-                  key={e.id}
-                  className="flex items-center justify-between gap-4 py-2 border-b border-amber-100 last:border-0"
-                >
-                  <span className="text-gray-900">
-                    <strong>{e.name}</strong> — {e.points_earned} pts
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => handleValidateExtra(e.id)}
-                    disabled={validatingExtraId === e.id}
-                    className="px-3 py-1.5 text-sm font-medium text-white bg-celeste-600 rounded hover:bg-celeste-700 disabled:opacity-50"
-                  >
-                    {validatingExtraId === e.id ? 'Validando...' : 'Validar'}
-                  </button>
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
-
-        <div className="mb-6 bg-white rounded-lg shadow p-6">
-          <h2 className="text-xl font-semibold text-gray-900 mb-3">Tareas unitarias extra</h2>
-          <p className="text-sm text-gray-600 mb-4">
-            Añade tareas que hayas hecho por encima de lo asignado (ej. una tarea puntual). Otros miembros deben validarlas.
-          </p>
-          <form onSubmit={handleAddExtra} className="flex flex-wrap gap-3 mb-4">
-            <input
-              type="text"
-              value={extraForm.name}
-              onChange={(e) => setExtraForm((p) => ({ ...p, name: e.target.value }))}
-              placeholder="Nombre de la tarea"
-              className="px-3 py-2 border border-gray-300 rounded-md shadow-sm text-gray-900 focus:outline-none focus:ring-celeste-500 focus:border-celeste-500 min-w-[180px]"
-            />
-            <input
-              type="number"
-              min="0"
-              value={extraForm.points}
-              onChange={(e) => setExtraForm((p) => ({ ...p, points: parseInt(e.target.value, 10) || 0 }))}
-              className="w-20 px-3 py-2 border border-gray-300 rounded-md shadow-sm text-gray-900 focus:outline-none focus:ring-celeste-500"
-            />
-            <span className="flex items-center text-sm text-gray-500">puntos</span>
-            <button
-              type="submit"
-              disabled={addingExtra || !extraForm.name.trim()}
-              className="px-4 py-2 bg-celeste-600 text-white rounded hover:bg-celeste-700 disabled:opacity-50"
-            >
-              {addingExtra ? 'Añadiendo...' : 'Añadir'}
-            </button>
-          </form>
-          {extraCompletions.length > 0 && (
-            <ul className="space-y-2">
-              {extraCompletions.map((e) => (
-                <li
-                  key={e.id}
-                  className="flex items-center justify-between py-2 border-b border-gray-100 last:border-0 text-sm"
-                >
-                  <span className="text-gray-900">{e.name}</span>
-                  <span className="text-gray-500">
-                    {e.points_earned} pts — {e.status === 'validated' ? 'Validado' : 'Pendiente de validación'}
-                  </span>
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
-
         {assignment?.task_group ? (
           <div>
             <div className="flex flex-wrap items-center justify-between gap-4 mb-4">
@@ -423,6 +346,83 @@ export default function DashboardClient({
             </div>
           </div>
         )}
+
+        {pendingExtraCompletions.length > 0 && (
+          <div className="mt-8 mb-6 bg-amber-50 border border-amber-200 rounded-lg p-4">
+            <h2 className="text-lg font-semibold text-gray-900 mb-3">
+              Tareas unitarias extra pendientes de validar
+            </h2>
+            <p className="text-sm text-gray-600 mb-3">
+              Otros han añadido estas tareas extra. Valida para que cuenten los puntos.
+            </p>
+            <ul className="space-y-2">
+              {pendingExtraCompletions.map((e) => (
+                <li
+                  key={e.id}
+                  className="flex items-center justify-between gap-4 py-2 border-b border-amber-100 last:border-0"
+                >
+                  <span className="text-gray-900">
+                    <strong>{e.name}</strong> — {e.points_earned} pts
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => handleValidateExtra(e.id)}
+                    disabled={validatingExtraId === e.id}
+                    className="px-3 py-1.5 text-sm font-medium text-white bg-celeste-600 rounded hover:bg-celeste-700 disabled:opacity-50"
+                  >
+                    {validatingExtraId === e.id ? 'Validando...' : 'Validar'}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+
+        <div className="mt-8 bg-white rounded-lg shadow p-6">
+          <h2 className="text-xl font-semibold text-gray-900 mb-3">Tareas unitarias extra</h2>
+          <p className="text-sm text-gray-600 mb-4">
+            Añade tareas que hayas hecho por encima de lo asignado (ej. una tarea puntual). Otros miembros deben validarlas.
+          </p>
+          <form onSubmit={handleAddExtra} className="flex flex-wrap gap-3 mb-4">
+            <input
+              type="text"
+              value={extraForm.name}
+              onChange={(e) => setExtraForm((p) => ({ ...p, name: e.target.value }))}
+              placeholder="Nombre de la tarea"
+              className="px-3 py-2 border border-gray-300 rounded-md shadow-sm text-gray-900 focus:outline-none focus:ring-celeste-500 focus:border-celeste-500 min-w-[180px]"
+            />
+            <input
+              type="number"
+              min="0"
+              value={extraForm.points}
+              onChange={(e) => setExtraForm((p) => ({ ...p, points: parseInt(e.target.value, 10) || 0 }))}
+              className="w-20 px-3 py-2 border border-gray-300 rounded-md shadow-sm text-gray-900 focus:outline-none focus:ring-celeste-500"
+            />
+            <span className="flex items-center text-sm text-gray-500">puntos</span>
+            <button
+              type="submit"
+              disabled={addingExtra || !extraForm.name.trim()}
+              className="px-4 py-2 bg-celeste-600 text-white rounded hover:bg-celeste-700 disabled:opacity-50"
+            >
+              {addingExtra ? 'Añadiendo...' : 'Añadir'}
+            </button>
+          </form>
+          {extraCompletions.length > 0 && (
+            <ul className="space-y-2">
+              {extraCompletions.map((e) => (
+                <li
+                  key={e.id}
+                  className="flex items-center justify-between py-2 border-b border-gray-100 last:border-0 text-sm"
+                >
+                  <span className="text-gray-900">{e.name}</span>
+                  <span className="text-gray-500">
+                    {e.points_earned} pts — {e.status === 'validated' ? 'Validado' : 'Pendiente de validación'}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
 
         {showSwapRequest && selectedTask && (
           <SwapRequest
