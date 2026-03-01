@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import type { Task } from '@/lib/db/schema'
 import { deleteTask } from '@/app/actions/tasks'
+import TaskFrequencyTag from './TaskFrequencyTag'
 
 type TasksListProps = {
   tasks: Task[]
@@ -69,7 +70,10 @@ export default function TasksList({ tasks: initialTasks }: TasksListProps) {
                 tasks.map((task) => (
                   <tr key={task.id}>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm font-medium text-gray-900">{task.name}</div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-medium text-gray-900">{task.name}</span>
+                        <TaskFrequencyTag frequency={task.frequency} />
+                      </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm text-gray-500">{task.points} puntos</div>

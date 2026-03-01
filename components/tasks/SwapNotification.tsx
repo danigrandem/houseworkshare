@@ -2,6 +2,7 @@
 
 import type { TaskSwapWithTask } from '@/lib/db/schema'
 import { formatDateTime } from '@/lib/utils/date'
+import TaskFrequencyTag from './TaskFrequencyTag'
 import { acceptTaskSwap, rejectTaskSwap } from '@/app/actions/swaps'
 
 type SwapNotificationProps = {
@@ -34,9 +35,12 @@ export default function SwapNotification({ swap, onResponse }: SwapNotificationP
     <div className="bg-celeste-50 border border-celeste-200 rounded-lg p-4 mb-4">
       <div className="flex justify-between items-start">
         <div className="flex-1">
-          <h3 className="text-sm font-medium text-celeste-900">
-            Solicitud de intercambio de {swap.task.name}
-          </h3>
+          <div className="flex items-center gap-2 flex-wrap">
+            <h3 className="text-sm font-medium text-celeste-900">
+              Solicitud de intercambio de {swap.task.name}
+            </h3>
+            <TaskFrequencyTag frequency={swap.task.frequency} />
+          </div>
           <p className="text-xs text-celeste-700 mt-1">
             De: {swap.from_user.name || swap.from_user.email}
           </p>

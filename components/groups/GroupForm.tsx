@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import type { TaskGroupWithTasks, Task } from '@/lib/db/schema'
 import { createGroup, updateGroup } from '@/app/actions/groups'
+import TaskFrequencyTag from '@/components/tasks/TaskFrequencyTag'
 
 type GroupFormProps = {
   group?: TaskGroupWithTasks
@@ -92,9 +93,10 @@ export default function GroupForm({ group, tasks }: GroupFormProps) {
                     onChange={() => handleTaskToggle(task.id)}
                     className="mr-3 h-4 w-4 text-celeste-600 focus:ring-celeste-500 border-gray-300 rounded"
                   />
-                  <div className="flex-1">
+                  <div className="flex-1 flex items-center gap-2 flex-wrap">
                     <span className="text-sm font-medium text-gray-900">{task.name}</span>
-                    <span className="text-xs text-gray-500 ml-2">{task.points} puntos</span>
+                    <TaskFrequencyTag frequency={task.frequency} />
+                    <span className="text-xs text-gray-500">{task.points} puntos</span>
                   </div>
                 </label>
               ))}

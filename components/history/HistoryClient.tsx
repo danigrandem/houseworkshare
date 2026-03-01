@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import type { WeeklyScoreWithUser, TaskCompletionWithTask } from '@/lib/db/schema'
 import { formatDateForDisplay, formatDateTime } from '@/lib/utils/date'
+import TaskFrequencyTag from '@/components/tasks/TaskFrequencyTag'
 
 type WeekData = {
   weekStart: string
@@ -135,9 +136,12 @@ export default function HistoryClient({ weeksData }: HistoryClientProps) {
                     >
                       <div className="flex justify-between items-start">
                         <div>
-                          <h3 className="text-sm font-medium text-gray-900">
-                            {completion.task.name}
-                          </h3>
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <h3 className="text-sm font-medium text-gray-900">
+                              {completion.task.name}
+                            </h3>
+                            <TaskFrequencyTag frequency={completion.task.frequency} />
+                          </div>
                           <p className="text-xs text-gray-500 mt-1">
                             {completion.user_id} • {completion.points_earned} puntos
                           </p>

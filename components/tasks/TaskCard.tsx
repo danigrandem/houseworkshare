@@ -2,6 +2,7 @@
 
 import type { Task } from '@/lib/db/schema'
 import { formatDateTime } from '@/lib/utils/date'
+import TaskFrequencyTag from './TaskFrequencyTag'
 
 type TaskCardProps = {
   task: Task
@@ -30,9 +31,12 @@ export default function TaskCard({
     <div className="bg-white rounded-lg shadow p-4 border border-gray-200">
       <div className="flex items-start justify-between">
         <div className="flex-1">
-          <h3 className="text-lg font-semibold text-gray-900">{task.name}</h3>
+          <div className="flex items-center gap-2 flex-wrap">
+            <h3 className="text-lg font-semibold text-gray-900">{task.name}</h3>
+            <TaskFrequencyTag frequency={task.frequency} />
+          </div>
           <p className="text-sm text-gray-500 mt-1">
-            {task.points} puntos {task.frequency === 'daily' ? '· Diaria' : '· Semanal'}
+            {task.points} puntos
           </p>
           {completed && completedAt && (
             <p className={`text-xs mt-2 ${completionStatus === 'validated' ? 'text-green-600' : 'text-amber-600'}`}>
