@@ -1,8 +1,21 @@
 /**
  * firstDayOfWeek: 0 = Sunday, 1 = Monday, ... 6 = Saturday (getDay() convention).
  */
+
+/** Parsea "YYYY-MM-DD" en hora local para que el día de la semana sea correcto en cualquier zona horaria. */
+function parseLocalDateString(s: string): Date {
+  const [y, m, d] = s.split('-').map(Number)
+  return new Date(y, m - 1, d)
+}
+
+function toLocalDate(date: Date | string): Date {
+  if (typeof date !== 'string') return date
+  if (/^\d{4}-\d{2}-\d{2}$/.test(date)) return parseLocalDateString(date)
+  return new Date(date)
+}
+
 export function getWeekStart(date: Date = new Date(), firstDayOfWeek: number = 1): Date {
-  const d = new Date(date)
+  const d = date instanceof Date ? date : toLocalDate(date as string)
   const day = d.getDay()
   let diff: number
   if (firstDayOfWeek === 0) {
@@ -25,12 +38,15 @@ export function getWeekEnd(date: Date = new Date(), firstDayOfWeek: number = 1):
 }
 
 export function formatDate(date: Date | string): string {
-  const d = typeof date === 'string' ? new Date(date) : date
-  return d.toISOString().split('T')[0]
+  const d = typeof date === 'string' ? toLocalDate(date) : date
+  const y = d.getFullYear()
+  const m = String(d.getMonth() + 1).padStart(2, '0')
+  const day = String(d.getDate()).padStart(2, '0')
+  return `${y}-${m}-${day}`
 }
 
 export function formatDateForDisplay(date: Date | string): string {
-  const d = typeof date === 'string' ? new Date(date) : date
+  const d = typeof date === 'string' ? toLocalDate(date) : date
   return d.toLocaleDateString('es-ES', {
     weekday: 'long',
     year: 'numeric',
@@ -40,7 +56,7 @@ export function formatDateForDisplay(date: Date | string): string {
 }
 
 export function formatDateTime(date: Date | string): string {
-  const d = typeof date === 'string' ? new Date(date) : date
+  const d = typeof date === 'string' ? toLocalDate(date) : date
   return d.toLocaleString('es-ES', {
     year: 'numeric',
     month: 'long',
@@ -73,8 +89,8 @@ export function getDaysRemainingInWeek(date: Date = new Date(), firstDayOfWeek: 
 }
 
 export function isSameDay(date1: Date | string, date2: Date | string): boolean {
-  const d1 = typeof date1 === 'string' ? new Date(date1) : date1
-  const d2 = typeof date2 === 'string' ? new Date(date2) : date2
+  const d1 = typeof date1 === 'string' ? toLocalDate(date1) : date1
+  const d2 = typeof date2 === 'string' ? toLocalDate(date2) : date2
   return (
     d1.getFullYear() === d2.getFullYear() &&
     d1.getMonth() === d2.getMonth() &&
@@ -83,15 +99,15 @@ export function isSameDay(date1: Date | string, date2: Date | string): boolean {
 }
 
 export function addDays(date: Date | string, days: number): Date {
-  const d = typeof date === 'string' ? new Date(date) : new Date(date)
+  const d = typeof date === 'string' ? toLocalDate(date) : new Date(date)
   const result = new Date(d)
   result.setDate(result.getDate() + days)
   return result
 }
 
 export function isDateInWeek(date: Date | string, weekStart: string, firstDayOfWeek: number = 1): boolean {
-  const d = typeof date === 'string' ? new Date(date) : date
-  const weekStartDate = new Date(weekStart)
+  const d = typeof date === 'string' ? toLocalDate(date) : date
+  const weekStartDate = toLocalDate(weekStart)
   const weekEndDate = getWeekEnd(weekStartDate, firstDayOfWeek)
   return d >= weekStartDate && d <= weekEndDate
 }

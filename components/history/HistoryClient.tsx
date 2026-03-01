@@ -19,7 +19,6 @@ export default function HistoryClient({ weeksData }: HistoryClientProps) {
   const [selectedWeek, setSelectedWeek] = useState<string | null>(
     weeksData[0]?.weekStart || null
   )
-
   const selectedWeekData = weeksData.find((w) => w.weekStart === selectedWeek)
 
   return (

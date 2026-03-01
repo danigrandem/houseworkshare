@@ -1,10 +1,17 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
-import { updateWeeklyConfig, assignGroupsThisWeek } from '@/app/actions/settings'
+import {
+  updateWeeklyConfig,
+  saveAssignmentsThisWeek,
+  getSuggestedAssignments,
+  type AssignmentInput,
+} from '@/app/actions/settings'
 import { updateHouseWeekStartDay, updateHouseRotationWeeks } from '@/app/actions/houses'
 import { formatDateForDisplay } from '@/lib/utils/date'
+import type { User } from '@/lib/db/schema'
+import type { TaskGroup } from '@/lib/db/schema'
 
 const WEEKDAY_OPTIONS: { value: number; label: string }[] = [
   { value: 0, label: 'Domingo' },
@@ -25,6 +32,9 @@ type SettingsClientProps = {
   weekStartDay: number
   rotationWeeks: number
   isOwner: boolean
+  users: User[]
+  groups: TaskGroup[]
+  initialAssignments: AssignmentInput[]
 }
 
 export default function SettingsClient({
@@ -34,18 +44,65 @@ export default function SettingsClient({
   weekStartDay,
   rotationWeeks,
   isOwner,
+  users,
+  groups,
+  initialAssignments,
 }: SettingsClientProps) {
   const router = useRouter()
   const [pointsTarget, setPointsTarget] = useState(currentPointsTarget)
   const [weekStartDayState, setWeekStartDayState] = useState(weekStartDay)
   const [rotationWeeksState, setRotationWeeksState] = useState(rotationWeeks)
   const [loading, setLoading] = useState(false)
-  const [assigning, setAssigning] = useState(false)
   const [savingWeekDay, setSavingWeekDay] = useState(false)
   const [savingRotation, setSavingRotation] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
   const [assignSuccess, setAssignSuccess] = useState(false)
+  const [showAssignModal, setShowAssignModal] = useState(false)
+  const [assignments, setAssignments] = useState<AssignmentInput[]>(initialAssignments)
+  const [savingAssignments, setSavingAssignments] = useState(false)
+  const [loadingSuggested, setLoadingSuggested] = useState(false)
+
+  const openAssignModal = useCallback(() => {
+    setAssignments(initialAssignments)
+    setError(null)
+    setAssignSuccess(false)
+    setShowAssignModal(true)
+  }, [initialAssignments])
+
+  const handleAssignmentChange = useCallback((userId: string, groupId: string | null) => {
+    setAssignments((prev) =>
+      prev.map((a) => (a.userId === userId ? { ...a, groupId } : a))
+    )
+  }, [])
+
+  const handleApplySuggested = useCallback(async () => {
+    setLoadingSuggested(true)
+    setError(null)
+    try {
+      const suggested = await getSuggestedAssignments()
+      setAssignments(suggested)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Error al cargar sugerencia')
+    } finally {
+      setLoadingSuggested(false)
+    }
+  }, [])
+
+  const handleSaveAssignments = useCallback(async () => {
+    setSavingAssignments(true)
+    setError(null)
+    try {
+      await saveAssignmentsThisWeek(assignments)
+      setAssignSuccess(true)
+      setShowAssignModal(false)
+      setTimeout(() => router.refresh(), 500)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Error al guardar asignaciones')
+    } finally {
+      setSavingAssignments(false)
+    }
+  }, [assignments, router])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -63,21 +120,6 @@ export default function SettingsClient({
       setError(err instanceof Error ? err.message : 'Error al actualizar la configuración')
     } finally {
       setLoading(false)
-    }
-  }
-
-  const handleAssignGroups = async () => {
-    setError(null)
-    setAssignSuccess(false)
-    setAssigning(true)
-    try {
-      await assignGroupsThisWeek()
-      setAssignSuccess(true)
-      setTimeout(() => router.refresh(), 1000)
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Error al asignar grupos')
-    } finally {
-      setAssigning(false)
     }
   }
 
@@ -227,22 +269,107 @@ export default function SettingsClient({
             Asignación de grupos
           </h2>
           <p className="text-sm text-gray-600 mb-4">
-            Asigna un grupo de tareas a cada miembro de la casa para esta semana. Si ya había asignaciones, se mantienen; solo se asignan quienes aún no tenían grupo. La rotación al siguiente grupo depende de la opción &quot;Cambio de grupo cada...&quot;.
+            {isOwner
+              ? 'Elige qué grupo de tareas hace cada miembro esta semana. Puedes usar la sugerencia por rotación o elegir manualmente.'
+              : 'Solo el dueño de la casa puede asignar grupos.'}
           </p>
           {assignSuccess && (
             <div className="mb-4 bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded text-sm">
               Grupos asignados correctamente. Actualiza el Dashboard para ver tu grupo.
             </div>
           )}
-          <button
-            type="button"
-            onClick={handleAssignGroups}
-            disabled={assigning}
-            className="px-4 py-2 bg-celeste-600 text-white rounded hover:bg-celeste-700 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {assigning ? 'Asignando...' : 'Asignar grupos esta semana'}
-          </button>
+          {isOwner && (
+            <button
+              type="button"
+              onClick={openAssignModal}
+              className="px-4 py-2 bg-celeste-600 text-white rounded hover:bg-celeste-700"
+            >
+              Asignar grupos esta semana
+            </button>
+          )}
         </div>
+
+        {showAssignModal && isOwner && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-xl shadow-lg max-w-md w-full max-h-[90vh] overflow-hidden flex flex-col">
+              <div className="p-6 border-b border-gray-200">
+                <h2 className="text-xl font-semibold text-gray-900">
+                  Asignar grupo a cada miembro
+                </h2>
+                <p className="text-sm text-gray-600 mt-1">
+                  Semana del {formatDateForDisplay(weekStartDate)}
+                </p>
+              </div>
+              <div className="p-6 overflow-y-auto flex-1">
+                {error && (
+                  <div className="mb-4 bg-red-50 border border-red-200 text-red-700 px-3 py-2 rounded text-sm">
+                    {error}
+                  </div>
+                )}
+                <div className="space-y-4">
+                  {users.map((member) => {
+                    const current = assignments.find((a) => a.userId === member.id)
+                    const groupId = current?.groupId ?? null
+                    return (
+                      <div
+                        key={member.id}
+                        className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4"
+                      >
+                        <label className="text-sm font-medium text-gray-900 min-w-[120px]">
+                          {member.name || member.email || 'Miembro'}
+                        </label>
+                        <select
+                          value={groupId ?? ''}
+                          onChange={(e) =>
+                            handleAssignmentChange(
+                              member.id,
+                              e.target.value === '' ? null : e.target.value
+                            )
+                          }
+                          className="flex-1 px-3 py-2 border border-gray-300 rounded-md text-gray-900 focus:outline-none focus:ring-celeste-500 focus:border-celeste-500 text-sm"
+                        >
+                          <option value="">Sin grupo</option>
+                          {groups.map((g) => (
+                            <option key={g.id} value={g.id}>
+                              {g.name}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    )
+                  })}
+                </div>
+                {groups.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={handleApplySuggested}
+                    disabled={loadingSuggested}
+                    className="mt-4 text-sm text-celeste-600 hover:text-celeste-800 disabled:opacity-50"
+                  >
+                    {loadingSuggested ? 'Cargando...' : 'Sugerir por rotación'}
+                  </button>
+                )}
+              </div>
+              <div className="p-6 border-t border-gray-200 flex gap-2 justify-end">
+                <button
+                  type="button"
+                  onClick={() => setShowAssignModal(false)}
+                  className="px-4 py-2 text-gray-700 bg-gray-100 rounded hover:bg-gray-200"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="button"
+                  onClick={handleSaveAssignments}
+                  disabled={savingAssignments}
+                  className="px-4 py-2 bg-celeste-600 text-white rounded hover:bg-celeste-700 disabled:opacity-50"
+                >
+                  {savingAssignments ? 'Guardando...' : 'Guardar asignaciones'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   )

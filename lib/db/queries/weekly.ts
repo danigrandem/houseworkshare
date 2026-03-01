@@ -147,6 +147,39 @@ export async function clearWeeklyAssignment(
   if (error) throw error
 }
 
+/** Set or update assignment for one user. Use null to clear. */
+export async function setWeeklyAssignment(
+  userId: string,
+  weekStartDate: string,
+  taskGroupId: string | null
+): Promise<void> {
+  const supabase = await createClient()
+  const houseId = await requireHouseId(userId)
+
+  if (taskGroupId === null) {
+    await clearWeeklyAssignment(userId, weekStartDate)
+    return
+  }
+
+  const { data: existing } = await supabase
+    .from('weekly_assignments')
+    .select('id')
+    .eq('user_id', userId)
+    .eq('week_start_date', weekStartDate)
+    .eq('house_id', houseId)
+    .maybeSingle()
+
+  if (existing) {
+    const { error } = await supabase
+      .from('weekly_assignments')
+      .update({ task_group_id: taskGroupId })
+      .eq('id', existing.id)
+    if (error) throw error
+  } else {
+    await createWeeklyAssignment(userId, weekStartDate, taskGroupId)
+  }
+}
+
 export async function getAllWeeklyAssignments(
   weekStartDate: string,
   userId: string
