@@ -14,6 +14,7 @@ export default function TaskForm({ task }: TaskFormProps) {
   const [name, setName] = useState(task?.name || '')
   const [points, setPoints] = useState(task?.points || 0)
   const [frequency, setFrequency] = useState<TaskFrequency>(task?.frequency || 'weekly')
+  const [weeklyMinimum, setWeeklyMinimum] = useState<number | ''>(task?.weekly_minimum ?? '')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -21,12 +22,14 @@ export default function TaskForm({ task }: TaskFormProps) {
     e.preventDefault()
     setError(null)
     setLoading(true)
+    const raw = weeklyMinimum === '' ? null : (typeof weeklyMinimum === 'number' ? weeklyMinimum : parseInt(String(weeklyMinimum), 10))
+    const minVal = raw !== null && !Number.isNaN(raw) ? raw : null
 
     try {
       if (task) {
-        await updateTaskAction(task.id, name, points, frequency)
+        await updateTaskAction(task.id, name, points, frequency, minVal ?? null)
       } else {
-        await createTaskAction(name, points, frequency)
+        await createTaskAction(name, points, frequency, minVal ?? null)
       }
       router.push('/tasks')
       router.refresh()
@@ -98,10 +101,33 @@ export default function TaskForm({ task }: TaskFormProps) {
               onChange={() => setFrequency('daily')}
               className="mr-2 text-celeste-600"
             />
-            Diaria
+            Unitaria
           </label>
         </div>
       </div>
+
+      {frequency === 'weekly' && (
+        <div className="mb-4">
+          <label htmlFor="weekly_minimum" className="block text-sm font-medium text-gray-700 mb-2">
+            Objetivo mínimo (veces en la semana)
+          </label>
+          <input
+            type="number"
+            id="weekly_minimum"
+            min="1"
+            placeholder="Vacío = 1 vez cuenta"
+            value={weeklyMinimum}
+            onChange={(e) => {
+              const v = e.target.value
+              setWeeklyMinimum(v === '' ? '' : parseInt(v, 10) || 1)
+            }}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm text-gray-900 focus:outline-none focus:ring-celeste-500 focus:border-celeste-500"
+          />
+          <p className="text-xs text-gray-500 mt-1">
+            Si se indica, los puntos solo se suman al alcanzar este número de realizaciones.
+          </p>
+        </div>
+      )}
 
       <div className="flex gap-4">
         <button

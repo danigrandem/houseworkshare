@@ -9,6 +9,8 @@ type TaskCardProps = {
   completed: boolean
   completedAt?: string
   completionStatus?: 'pending' | 'validated'
+  /** For weekly tasks with weekly_minimum: number of completions this week (to show progress) */
+  weeklyCompletionCount?: number
   onComplete?: () => void
   onSwap?: () => void
   isSwapped?: boolean
@@ -21,12 +23,17 @@ export default function TaskCard({
   completed,
   completedAt,
   completionStatus,
+  weeklyCompletionCount,
   onComplete,
   onSwap,
   isSwapped = false,
   swapType,
   loading = false,
 }: TaskCardProps) {
+  const min = task.frequency === 'weekly' ? (task.weekly_minimum ?? 1) : 0
+  const showProgress = task.frequency === 'weekly' && min > 0 && weeklyCompletionCount !== undefined
+  const progressReached = showProgress && weeklyCompletionCount >= min
+
   return (
     <div className="bg-white rounded-lg shadow p-4 border border-gray-200">
       <div className="flex items-start justify-between">
@@ -37,7 +44,21 @@ export default function TaskCard({
           </div>
           <p className="text-sm text-gray-500 mt-1">
             {task.points} puntos
+            {showProgress && (
+              <span className="ml-2">
+                — <strong>{weeklyCompletionCount}/{min}</strong> realizaciones
+                {progressReached && <span className="text-green-600 ml-1">✓</span>}
+              </span>
+            )}
           </p>
+          {min > 1 && (
+            <div className="mt-1 w-full bg-gray-200 rounded-full h-1.5 max-w-[120px]">
+              <div
+                className={`h-1.5 rounded-full ${progressReached ? 'bg-green-600' : 'bg-amber-500'}`}
+                style={{ width: `${Math.min(100, (weeklyCompletionCount ?? 0) / min * 100)}%` }}
+              />
+            </div>
+          )}
           {completed && completedAt && (
             <p className={`text-xs mt-2 ${completionStatus === 'validated' ? 'text-green-600' : 'text-amber-600'}`}>
               {completionStatus === 'validated'

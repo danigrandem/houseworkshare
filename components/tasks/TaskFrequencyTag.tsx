@@ -17,7 +17,7 @@ export default function TaskFrequencyTag({ frequency, className = '' }: TaskFreq
           : 'bg-slate-100 text-slate-700'
       } ${className}`}
     >
-      {isDaily ? 'Diario' : 'Semanal'}
+      {isDaily ? 'Unitario' : 'Semanal'}
     </span>
   )
 }

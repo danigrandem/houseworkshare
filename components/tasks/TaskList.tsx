@@ -6,6 +6,8 @@ import TaskCard from './TaskCard'
 type TaskListProps = {
   tasks: Task[]
   completions: Map<string, { completed: boolean; completedAt?: string; status?: 'pending' | 'validated' }>
+  /** For weekly tasks with weekly_minimum: taskId -> number of completions this week */
+  weeklyCompletionCounts?: Map<string, number>
   today?: string
   onComplete?: (taskId: string) => void
   onSwap?: (taskId: string) => void
@@ -16,6 +18,7 @@ type TaskListProps = {
 export default function TaskList({
   tasks,
   completions,
+  weeklyCompletionCounts,
   today = '',
   onComplete,
   onSwap,
@@ -31,6 +34,7 @@ export default function TaskList({
           const key = task.frequency === 'daily' ? `${task.id}_${today}` : task.id
           const completion = completions.get(key) || { completed: false }
           const swap = swaps?.get(task.id) || { isSwapped: false }
+          const weeklyCount = weeklyCompletionCounts?.get(task.id)
           return (
             <TaskCard
               key={task.id}
@@ -38,6 +42,7 @@ export default function TaskList({
               completed={completion.completed}
               completedAt={completion.completedAt}
               completionStatus={completion.status}
+              weeklyCompletionCount={weeklyCount}
               onComplete={onComplete ? () => onComplete(task.id) : undefined}
               onSwap={onSwap ? () => onSwap(task.id) : undefined}
               isSwapped={swap.isSwapped}

@@ -32,14 +32,16 @@ export async function createTask(
   name: string,
   points: number,
   userId: string,
-  frequency: TaskFrequency = 'weekly'
+  frequency: TaskFrequency = 'weekly',
+  weeklyMinimum?: number | null
 ): Promise<Task> {
   const supabase = await createClient()
   const houseId = await requireHouseId(userId)
-  
+  const payload: Record<string, unknown> = { name, points, house_id: houseId, frequency }
+  if (frequency === 'weekly' && weeklyMinimum !== undefined) payload.weekly_minimum = weeklyMinimum
   const { data, error } = await supabase
     .from('tasks')
-    .insert({ name, points, house_id: houseId, frequency })
+    .insert(payload)
     .select()
     .single()
 
@@ -51,11 +53,13 @@ export async function updateTask(
   id: string,
   name: string,
   points: number,
-  frequency?: TaskFrequency
+  frequency?: TaskFrequency,
+  weeklyMinimum?: number | null
 ): Promise<Task> {
   const supabase = await createClient()
-  const updates: { name: string; points: number; frequency?: TaskFrequency } = { name, points }
+  const updates: Record<string, unknown> = { name, points }
   if (frequency !== undefined) updates.frequency = frequency
+  if (weeklyMinimum !== undefined) updates.weekly_minimum = weeklyMinimum
   const { data, error } = await supabase
     .from('tasks')
     .update(updates)

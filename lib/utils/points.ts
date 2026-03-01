@@ -1,4 +1,6 @@
-import type { WeeklyScore } from '@/lib/db/schema'
+import type { WeeklyScore, Task } from '@/lib/db/schema'
+import { getCompletionsByUserAndWeek } from '@/lib/db/queries/completions'
+import { getExtraCompletionsByUserAndWeek } from '@/lib/db/queries/extra-completions'
 
 export type PointsCalculation = {
   userId: string
@@ -71,4 +73,51 @@ export function calculateCarriedOverPoints(
   })
 
   return carriedOver
+}
+
+/**
+ * Computes effective points for a user in a week:
+ * - Daily tasks: sum of each validated completion's points.
+ * - Weekly tasks without weekly_minimum: add task.points once per completion (current behavior).
+ * - Weekly tasks with weekly_minimum: add task.points only once when validated completions count >= weekly_minimum.
+ * - Extra completions: sum of validated extra completions' points.
+ */
+export async function calculateEffectivePointsForWeek(
+  userId: string,
+  weekStartDate: string
+): Promise<number> {
+  const [completions, extraCompletions] = await Promise.all([
+    getCompletionsByUserAndWeek(userId, weekStartDate),
+    getExtraCompletionsByUserAndWeek(userId, weekStartDate),
+  ])
+
+  const validated = completions.filter((c) => c.status === 'validated')
+  let total = 0
+
+  const byTask = new Map<string, { task: Task; completions: typeof validated }>()
+  for (const c of validated) {
+    if (!c.task) continue
+    if (!byTask.has(c.task_id)) byTask.set(c.task_id, { task: c.task, completions: [] })
+    byTask.get(c.task_id)!.completions.push(c)
+  }
+
+  for (const { task, completions: taskCompletions } of byTask.values()) {
+    if (task.frequency === 'daily') {
+      total += taskCompletions.reduce((s, c) => s + c.points_earned, 0)
+      continue
+    }
+    if (task.frequency === 'weekly') {
+      const min = task.weekly_minimum ?? 1
+      if (taskCompletions.length >= min) {
+        total += task.points
+      }
+    }
+  }
+
+  const extraPoints = extraCompletions
+    .filter((e) => e.status === 'validated')
+    .reduce((s, e) => s + e.points_earned, 0)
+  total += extraPoints
+
+  return total
 }

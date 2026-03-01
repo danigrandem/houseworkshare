@@ -53,6 +53,8 @@ export type Task = {
   points: number
   house_id: string
   frequency: TaskFrequency
+  /** For weekly tasks: minimum completions in the week to earn points. Null = 1 counts. */
+  weekly_minimum?: number | null
   created_at: string
   updated_at: string
 }
@@ -153,6 +155,20 @@ export type WeeklyAssignmentWithGroup = WeeklyAssignment & {
 
 export type TaskCompletionWithTask = TaskCompletion & {
   task: Task
+}
+
+export type ExtraCompletion = {
+  id: string
+  user_id: string
+  house_id: string
+  week_start_date: string
+  name: string
+  points_earned: number
+  completed_at: string
+  status: CompletionStatus
+  validated_at: string | null
+  validated_by: string | null
+  created_at: string
 }
 
 export type WeeklyScoreWithUser = WeeklyScore & {

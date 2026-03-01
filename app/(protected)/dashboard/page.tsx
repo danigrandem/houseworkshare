@@ -11,6 +11,7 @@ import {
 } from '@/lib/db/queries/weekly'
 import { processWeekEnd } from '@/lib/utils/weekly-scores'
 import { getCompletionsByUserAndWeek, getCompletionsByWeek, getPendingCompletionsToValidate } from '@/lib/db/queries/completions'
+import { getExtraCompletionsByUserAndWeek, getPendingExtraCompletionsToValidate } from '@/lib/db/queries/extra-completions'
 import { getPendingSwapsForUser, getActiveSwapForTask } from '@/lib/db/queries/swaps'
 import DashboardClient from '@/components/dashboard/DashboardClient'
 
@@ -43,7 +44,7 @@ export default async function DashboardPage() {
     await processWeekEnd(previousWeekStart, baseTarget, user.id)
   }
 
-  const [assignment, weeklyScore, weeklyConfig, completions, pendingCompletionsToValidate, pendingSwaps, users, allCompletions] = await Promise.all([
+  const [assignment, weeklyScore, weeklyConfig, completions, pendingCompletionsToValidate, pendingSwaps, users, allCompletions, extraCompletions, pendingExtraCompletions] = await Promise.all([
     getWeeklyAssignment(user.id, weekStartDate),
     getWeeklyScore(user.id, weekStartDate),
     getWeeklyConfig(weekStartDate, user.id),
@@ -52,6 +53,8 @@ export default async function DashboardPage() {
     getPendingSwapsForUser(user.id),
     getAllUsers(user.id),
     getCompletionsByWeek(weekStartDate, user.id),
+    getExtraCompletionsByUserAndWeek(user.id, weekStartDate),
+    getPendingExtraCompletionsToValidate(weekStartDate, user.id),
   ])
   const membersAssignments = await Promise.all(
     users.map((u) => getWeeklyAssignment(u.id, weekStartDate))
@@ -95,11 +98,14 @@ export default async function DashboardPage() {
       today={today}
       userId={user.id}
       weekStartDate={weekStartDate}
+      firstDayOfWeek={firstDayOfWeek}
       pendingSwaps={pendingSwaps}
       swaps={swapsMap}
       users={users}
       membersWithAssignments={membersWithAssignments}
       allCompletions={allCompletions}
+      extraCompletions={extraCompletions}
+      pendingExtraCompletions={pendingExtraCompletions}
     />
   )
 }

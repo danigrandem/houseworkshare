@@ -8,11 +8,12 @@ import type {
   TaskSwapWithTask,
   User,
 } from '@/lib/db/schema'
+import type { ExtraCompletion } from '@/lib/db/schema'
 import TaskList from '@/components/tasks/TaskList'
 import SwapNotification from '@/components/tasks/SwapNotification'
 import SwapRequest from '@/components/tasks/SwapRequest'
 import { getDaysRemainingInWeek, formatDateForDisplay } from '@/lib/utils/date'
-import { createTaskCompletion, validateTaskCompletion, clearMyAssignment } from '@/app/actions'
+import { createTaskCompletion, validateTaskCompletion, clearMyAssignment, createExtraCompletionAction, validateExtraCompletionAction } from '@/app/actions'
 import type { CompletionStatus } from '@/lib/db/schema'
 
 type MemberWithAssignment = {
@@ -29,11 +30,14 @@ type DashboardClientProps = {
   today: string
   userId: string
   weekStartDate: string
+  firstDayOfWeek: number
   pendingSwaps: TaskSwapWithTask[]
   swaps: Map<string, { isSwapped: boolean; swapType?: 'temporary' | 'permanent' }>
   users: User[]
   membersWithAssignments: MemberWithAssignment[]
   allCompletions: TaskCompletionWithTask[]
+  extraCompletions: ExtraCompletion[]
+  pendingExtraCompletions: ExtraCompletion[]
 }
 
 export default function DashboardClient({
@@ -45,18 +49,24 @@ export default function DashboardClient({
   today,
   userId,
   weekStartDate,
+  firstDayOfWeek,
   pendingSwaps,
   swaps,
   users,
   membersWithAssignments,
   allCompletions,
+  extraCompletions,
+  pendingExtraCompletions,
 }: DashboardClientProps) {
   const router = useRouter()
   const [loading, setLoading] = useState<string | null>(null)
   const [validatingId, setValidatingId] = useState<string | null>(null)
+  const [validatingExtraId, setValidatingExtraId] = useState<string | null>(null)
   const [showSwapRequest, setShowSwapRequest] = useState(false)
   const [selectedTask, setSelectedTask] = useState<{ id: string; name: string } | null>(null)
   const [clearingAssignment, setClearingAssignment] = useState(false)
+  const [extraForm, setExtraForm] = useState({ name: '', points: 10 })
+  const [addingExtra, setAddingExtra] = useState(false)
 
   const tasks = assignment?.task_group?.tasks || []
   const completionsMap = new Map(
@@ -72,6 +82,12 @@ export default function DashboardClient({
       ]
     })
   )
+  const weeklyCompletionCounts = new Map<string, number>()
+  completions.forEach((c) => {
+    if (c.task?.frequency === 'weekly') {
+      weeklyCompletionCounts.set(c.task_id, (weeklyCompletionCounts.get(c.task_id) || 0) + 1)
+    }
+  })
 
   const handleComplete = async (taskId: string) => {
     const task = tasks.find((t) => t.id === taskId)
@@ -124,7 +140,34 @@ export default function DashboardClient({
     }
   }
 
-  const daysRemaining = getDaysRemainingInWeek()
+  const handleValidateExtra = async (completionId: string) => {
+    setValidatingExtraId(completionId)
+    try {
+      await validateExtraCompletionAction(completionId)
+      router.refresh()
+    } catch (err) {
+      console.error('Error validando:', err)
+    } finally {
+      setValidatingExtraId(null)
+    }
+  }
+
+  const handleAddExtra = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!extraForm.name.trim() || extraForm.points < 0) return
+    setAddingExtra(true)
+    try {
+      await createExtraCompletionAction(weekStartDate, extraForm.name.trim(), extraForm.points)
+      setExtraForm({ name: '', points: 10 })
+      router.refresh()
+    } catch (err) {
+      console.error('Error añadiendo tarea extra:', err)
+    } finally {
+      setAddingExtra(false)
+    }
+  }
+
+  const daysRemaining = getDaysRemainingInWeek(new Date(), firstDayOfWeek)
   const progressPercentage = pointsTarget > 0 ? (pointsEarned / pointsTarget) * 100 : 0
 
   return (
@@ -204,6 +247,83 @@ export default function DashboardClient({
           </div>
         )}
 
+        {pendingExtraCompletions.length > 0 && (
+          <div className="mb-6 bg-amber-50 border border-amber-200 rounded-lg p-4">
+            <h2 className="text-lg font-semibold text-gray-900 mb-3">
+              Tareas unitarias extra pendientes de validar
+            </h2>
+            <p className="text-sm text-gray-600 mb-3">
+              Otros han añadido estas tareas extra. Valida para que cuenten los puntos.
+            </p>
+            <ul className="space-y-2">
+              {pendingExtraCompletions.map((e) => (
+                <li
+                  key={e.id}
+                  className="flex items-center justify-between gap-4 py-2 border-b border-amber-100 last:border-0"
+                >
+                  <span className="text-gray-900">
+                    <strong>{e.name}</strong> — {e.points_earned} pts
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => handleValidateExtra(e.id)}
+                    disabled={validatingExtraId === e.id}
+                    className="px-3 py-1.5 text-sm font-medium text-white bg-celeste-600 rounded hover:bg-celeste-700 disabled:opacity-50"
+                  >
+                    {validatingExtraId === e.id ? 'Validando...' : 'Validar'}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+
+        <div className="mb-6 bg-white rounded-lg shadow p-6">
+          <h2 className="text-xl font-semibold text-gray-900 mb-3">Tareas unitarias extra</h2>
+          <p className="text-sm text-gray-600 mb-4">
+            Añade tareas que hayas hecho por encima de lo asignado (ej. una tarea puntual). Otros miembros deben validarlas.
+          </p>
+          <form onSubmit={handleAddExtra} className="flex flex-wrap gap-3 mb-4">
+            <input
+              type="text"
+              value={extraForm.name}
+              onChange={(e) => setExtraForm((p) => ({ ...p, name: e.target.value }))}
+              placeholder="Nombre de la tarea"
+              className="px-3 py-2 border border-gray-300 rounded-md shadow-sm text-gray-900 focus:outline-none focus:ring-celeste-500 focus:border-celeste-500 min-w-[180px]"
+            />
+            <input
+              type="number"
+              min="0"
+              value={extraForm.points}
+              onChange={(e) => setExtraForm((p) => ({ ...p, points: parseInt(e.target.value, 10) || 0 }))}
+              className="w-20 px-3 py-2 border border-gray-300 rounded-md shadow-sm text-gray-900 focus:outline-none focus:ring-celeste-500"
+            />
+            <span className="flex items-center text-sm text-gray-500">puntos</span>
+            <button
+              type="submit"
+              disabled={addingExtra || !extraForm.name.trim()}
+              className="px-4 py-2 bg-celeste-600 text-white rounded hover:bg-celeste-700 disabled:opacity-50"
+            >
+              {addingExtra ? 'Añadiendo...' : 'Añadir'}
+            </button>
+          </form>
+          {extraCompletions.length > 0 && (
+            <ul className="space-y-2">
+              {extraCompletions.map((e) => (
+                <li
+                  key={e.id}
+                  className="flex items-center justify-between py-2 border-b border-gray-100 last:border-0 text-sm"
+                >
+                  <span className="text-gray-900">{e.name}</span>
+                  <span className="text-gray-500">
+                    {e.points_earned} pts — {e.status === 'validated' ? 'Validado' : 'Pendiente de validación'}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+
         {assignment?.task_group ? (
           <div>
             <div className="flex flex-wrap items-center justify-between gap-4 mb-4">
@@ -222,6 +342,7 @@ export default function DashboardClient({
             <TaskList
               tasks={tasks}
               completions={completionsMap}
+              weeklyCompletionCounts={weeklyCompletionCounts}
               today={today}
               onComplete={handleComplete}
               onSwap={handleSwapClick}
@@ -263,6 +384,12 @@ export default function DashboardClient({
                       ]
                     })
                   )
+                  const memberWeeklyCounts = new Map<string, number>()
+                  memberCompletions.forEach((c) => {
+                    if (c.task?.frequency === 'weekly') {
+                      memberWeeklyCounts.set(c.task_id, (memberWeeklyCounts.get(c.task_id) || 0) + 1)
+                    }
+                  })
                   const memberTasks = memberAssignment?.task_group?.tasks || []
                   const memberName = member.name || member.email || 'Miembro'
                   return (
@@ -283,6 +410,7 @@ export default function DashboardClient({
                         <TaskList
                           tasks={memberTasks}
                           completions={memberCompletionsMap}
+                          weeklyCompletionCounts={memberWeeklyCounts}
                           today={today}
                           swaps={new Map()}
                         />
