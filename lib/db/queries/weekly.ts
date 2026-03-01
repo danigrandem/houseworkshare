@@ -255,7 +255,7 @@ export async function updateWeeklyScorePoints(
 ): Promise<WeeklyScore> {
   const supabase = await createClient()
   const houseId = await requireHouseId(userId)
-  
+
   const { data, error } = await supabase
     .from('weekly_scores')
     .update({ points_earned: pointsEarned })
@@ -265,7 +265,14 @@ export async function updateWeeklyScorePoints(
     .select()
     .single()
 
-  if (error) throw error
+  if (error) {
+    if (error.code === 'PGRST116') {
+      const config = await getWeeklyConfig(weekStartDate, userId)
+      const target = config?.points_target_per_person ?? 50
+      return createOrUpdateWeeklyScore(userId, weekStartDate, target, pointsEarned, 0)
+    }
+    throw error
+  }
   return data
 }
 
