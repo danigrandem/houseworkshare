@@ -4,7 +4,7 @@ import { createClient } from '@/lib/supabase/server'
 import { createOrUpdateWeeklyConfig, setWeeklyAssignment } from '@/lib/db/queries/weekly'
 import { getCurrentUserHouse } from '@/lib/db/queries/houses'
 import { rotateWeeklyAssignments } from '@/lib/utils/rotation'
-import { getWeekStartString } from '@/lib/utils/date'
+import { getWeekStartString, addDays } from '@/lib/utils/date'
 
 export async function updateWeeklyConfig(weekStartDate: string, pointsTargetPerPerson: number) {
   const supabase = await createClient()
@@ -79,7 +79,6 @@ export async function getSuggestedAssignments(): Promise<AssignmentInput[]> {
   const weekStartDate = getWeekStartString(undefined, firstDay)
   const { getAllGroups } = await import('@/lib/db/queries/groups')
   const { getAllUsers, getAllWeeklyAssignments } = await import('@/lib/db/queries/weekly')
-  const { getWeekStartString, addDays } = await import('@/lib/utils/date')
 
   const [groups, users, existingAssignments] = await Promise.all([
     getAllGroups(user.id),
