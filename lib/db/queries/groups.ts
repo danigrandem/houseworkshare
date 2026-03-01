@@ -2,6 +2,8 @@ import { createClient } from '@/lib/supabase/server'
 import type { TaskGroup, TaskGroupWithTasks, Task } from '@/lib/db/schema'
 import { requireHouseId } from './house-utils'
 
+export type TaskGroupWithTotalPoints = TaskGroup & { total_points: number }
+
 export async function getAllGroups(userId: string): Promise<TaskGroup[]> {
   const supabase = await createClient()
   const houseId = await requireHouseId(userId)
@@ -14,6 +16,54 @@ export async function getAllGroups(userId: string): Promise<TaskGroup[]> {
 
   if (error) throw error
   return data || []
+}
+
+export async function getAllGroupsWithTotalPoints(userId: string): Promise<TaskGroupWithTotalPoints[]> {
+  const supabase = await createClient()
+  const houseId = await requireHouseId(userId)
+
+  const { data: groups, error: groupsError } = await supabase
+    .from('task_groups')
+    .select('*')
+    .eq('house_id', houseId)
+    .order('name')
+
+  if (groupsError) throw groupsError
+  if (!groups?.length) return []
+
+  const groupIds = groups.map((g) => g.id)
+  const { data: items, error: itemsError } = await supabase
+    .from('task_group_items')
+    .select('task_group_id, task_id')
+    .in('task_group_id', groupIds)
+
+  if (itemsError) throw itemsError
+  const itemList = items || []
+  const taskIds = [...new Set(itemList.map((i) => i.task_id))]
+  let tasksMap: Map<string, { points: number }> = new Map()
+
+  if (taskIds.length > 0) {
+    const { data: tasks, error: tasksError } = await supabase
+      .from('tasks')
+      .select('id, points')
+      .in('id', taskIds)
+    if (tasksError) throw tasksError
+    tasksMap = new Map((tasks || []).map((t) => [t.id, { points: t.points }]))
+  }
+
+  const totalByGroup = new Map<string, number>()
+  for (const g of groups) {
+    totalByGroup.set(g.id, 0)
+  }
+  for (const i of itemList) {
+    const points = tasksMap.get(i.task_id)?.points ?? 0
+    totalByGroup.set(i.task_group_id, (totalByGroup.get(i.task_group_id) ?? 0) + points)
+  }
+
+  return groups.map((g) => ({
+    ...g,
+    total_points: totalByGroup.get(g.id) ?? 0,
+  }))
 }
 
 export async function getGroupById(id: string): Promise<TaskGroupWithTasks | null> {

@@ -2,11 +2,11 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import type { TaskGroup } from '@/lib/db/schema'
+import type { TaskGroupWithTotalPoints } from '@/lib/db/queries/groups'
 import { deleteGroup } from '@/app/actions/groups'
 
 type GroupsListProps = {
-  groups: TaskGroup[]
+  groups: TaskGroupWithTotalPoints[]
 }
 
 export default function GroupsList({ groups: initialGroups }: GroupsListProps) {
@@ -54,6 +54,8 @@ export default function GroupsList({ groups: initialGroups }: GroupsListProps) {
                     <h2 className="text-xl font-semibold text-gray-900">{group.name}</h2>
                     <p className="text-sm text-gray-500 mt-1">
                       Creado: {new Date(group.created_at).toLocaleDateString('es-ES')}
+                      {' · '}
+                      <span className="font-medium text-gray-700">{group.total_points} puntos totales</span>
                     </p>
                   </div>
                   <div className="flex gap-2">

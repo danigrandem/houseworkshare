@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
-import { getAllGroups } from '@/lib/db/queries/groups'
+import { getAllGroupsWithTotalPoints } from '@/lib/db/queries/groups'
 import GroupsList from '@/components/groups/GroupsList'
 
 export default async function GroupsPage() {
@@ -13,7 +13,7 @@ export default async function GroupsPage() {
     redirect('/login')
   }
 
-  const groups = await getAllGroups(user.id)
+  const groups = await getAllGroupsWithTotalPoints(user.id)
 
   return <GroupsList groups={groups} />
 }
