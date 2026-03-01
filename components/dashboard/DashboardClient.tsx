@@ -13,7 +13,7 @@ import TaskList from '@/components/tasks/TaskList'
 import SwapNotification from '@/components/tasks/SwapNotification'
 import SwapRequest from '@/components/tasks/SwapRequest'
 import { getDaysRemainingInWeek, formatDateForDisplay } from '@/lib/utils/date'
-import { createTaskCompletion, validateTaskCompletion, clearMyAssignment, createExtraCompletionAction, validateExtraCompletionAction } from '@/app/actions'
+import { createTaskCompletion, deleteMyLastCompletion, deleteLastTaskCompletion, validateTaskCompletion, clearMyAssignment, createExtraCompletionAction, validateExtraCompletionAction } from '@/app/actions'
 import type { CompletionStatus } from '@/lib/db/schema'
 
 type MemberWithAssignment = {
@@ -67,6 +67,8 @@ export default function DashboardClient({
   const [clearingAssignment, setClearingAssignment] = useState(false)
   const [extraForm, setExtraForm] = useState({ name: '', points: 10 })
   const [addingExtra, setAddingExtra] = useState(false)
+  const [undoingLast, setUndoingLast] = useState(false)
+  const [undoingTaskId, setUndoingTaskId] = useState<string | null>(null)
 
   const tasks = assignment?.task_group?.tasks || []
   const completionsMap = new Map(
@@ -113,6 +115,30 @@ export default function DashboardClient({
 
   const handleSwapSuccess = () => {
     router.refresh()
+  }
+
+  const handleUndoLastCompletion = async () => {
+    setUndoingLast(true)
+    try {
+      await deleteMyLastCompletion(weekStartDate)
+      router.refresh()
+    } catch (err) {
+      console.error('Error al quitar última realización:', err)
+    } finally {
+      setUndoingLast(false)
+    }
+  }
+
+  const handleUndoLastForTask = async (taskId: string) => {
+    setUndoingTaskId(taskId)
+    try {
+      await deleteLastTaskCompletion(taskId, weekStartDate)
+      router.refresh()
+    } catch (err) {
+      console.error('Error al deshacer realización:', err)
+    } finally {
+      setUndoingTaskId(null)
+    }
   }
 
   const handleClearAssignment = async () => {
@@ -198,6 +224,15 @@ export default function DashboardClient({
           </div>
           <p className="text-sm text-gray-600">
             {daysRemaining} días restantes en la semana
+            {' · '}
+            <button
+              type="button"
+              onClick={handleUndoLastCompletion}
+              disabled={undoingLast || completions.length === 0}
+              className="text-gray-500 hover:text-red-600 underline disabled:opacity-50 disabled:no-underline disabled:cursor-default"
+            >
+              {undoingLast ? 'Quitando...' : 'Quitar última realización'}
+            </button>
           </p>
         </div>
 
@@ -268,9 +303,11 @@ export default function DashboardClient({
               weeklyCompletionCounts={weeklyCompletionCounts}
               today={today}
               onComplete={handleComplete}
+              onUndoLast={handleUndoLastForTask}
               onSwap={handleSwapClick}
               swaps={swaps}
               loading={loading}
+              undoingTaskId={undoingTaskId}
             />
           </div>
         ) : (

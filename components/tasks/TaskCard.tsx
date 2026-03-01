@@ -12,10 +12,13 @@ type TaskCardProps = {
   /** For weekly tasks with weekly_minimum: number of completions this week (to show progress) */
   weeklyCompletionCount?: number
   onComplete?: () => void
+  /** Deshacer última realización de esta tarea (solo semanales con realizaciones) */
+  onUndoLast?: () => void
   onSwap?: () => void
   isSwapped?: boolean
   swapType?: 'temporary' | 'permanent'
   loading?: boolean
+  undoing?: boolean
 }
 
 export default function TaskCard({
@@ -25,10 +28,12 @@ export default function TaskCard({
   completionStatus,
   weeklyCompletionCount,
   onComplete,
+  onUndoLast,
   onSwap,
   isSwapped = false,
   swapType,
   loading = false,
+  undoing = false,
 }: TaskCardProps) {
   const min = task.frequency === 'weekly' ? (task.weekly_minimum ?? 1) : 0
   const showProgress = task.frequency === 'weekly' && min > 0 && weeklyCompletionCount !== undefined
@@ -55,12 +60,36 @@ export default function TaskCard({
             )}
           </p>
           {min > 1 && (
-            <div className="mt-1 w-full bg-gray-200 rounded-full h-1.5 xl:max-w-[120px]">
-              <div
-                className={`h-1.5 rounded-full ${progressReached ? 'bg-green-600' : 'bg-amber-500'}`}
-                style={{ width: `${Math.min(100, (weeklyCompletionCount ?? 0) / min * 100)}%` }}
-              />
+            <div className="mt-1 flex items-center gap-2 flex-wrap">
+              <div className="w-full bg-gray-200 rounded-full h-1.5 xl:max-w-[120px]">
+                <div
+                  className={`h-1.5 rounded-full ${progressReached ? 'bg-green-600' : 'bg-amber-500'}`}
+                  style={{ width: `${Math.min(100, (weeklyCompletionCount ?? 0) / min * 100)}%` }}
+                />
+              </div>
+              {weeklyCompletionCount != null && weeklyCompletionCount > 0 && onUndoLast && (
+                <button
+                  type="button"
+                  onClick={onUndoLast}
+                  disabled={undoing}
+                  className="text-xs text-gray-500 hover:text-red-600 underline disabled:opacity-50"
+                >
+                  {undoing ? 'Quitando...' : 'Deshacer última'}
+                </button>
+              )}
             </div>
+          )}
+          {task.frequency === 'weekly' && (weeklyCompletionCount ?? 0) > 0 && onUndoLast && min === 1 && (
+            <p className="mt-1">
+              <button
+                type="button"
+                onClick={onUndoLast}
+                disabled={undoing}
+                className="text-xs text-gray-500 hover:text-red-600 underline disabled:opacity-50"
+              >
+                {undoing ? 'Quitando...' : 'Deshacer última'}
+              </button>
+            </p>
           )}
           {completed && completedAt && (
             <p className={`text-xs mt-2 ${completionStatus === 'validated' ? 'text-green-600' : 'text-amber-600'}`}>

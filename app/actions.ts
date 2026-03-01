@@ -4,6 +4,8 @@ import { createClient } from '@/lib/supabase/server'
 import {
   createTaskCompletion as createCompletion,
   validateTaskCompletion as validateCompletionQuery,
+  getCompletionsByUserAndWeek,
+  deleteTaskCompletion as deleteTaskCompletionQuery,
 } from '@/lib/db/queries/completions'
 import { getTaskById } from '@/lib/db/queries/tasks'
 import {
@@ -41,6 +43,46 @@ export async function createTaskCompletion(
 
   const totalPoints = await calculateEffectivePointsForWeek(userId, weekStartDate)
   await updateWeeklyScorePoints(userId, weekStartDate, totalPoints)
+}
+
+/** Quita la última realización que marcaste esta semana (rollback de "Marcar otra realización" o "Completar"). */
+export async function deleteMyLastCompletion(weekStartDate: string) {
+  const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  if (!user) throw new Error('No autorizado')
+
+  const list = await getCompletionsByUserAndWeek(user.id, weekStartDate)
+  const sorted = [...list].sort(
+    (a, b) => new Date(b.completed_at).getTime() - new Date(a.completed_at).getTime()
+  )
+  const last = sorted[0]
+  if (!last) throw new Error('No hay realización que quitar')
+
+  await deleteTaskCompletionQuery(last.id)
+  const totalPoints = await calculateEffectivePointsForWeek(user.id, weekStartDate)
+  await updateWeeklyScorePoints(user.id, weekStartDate, totalPoints)
+}
+
+/** Quita la última realización de una tarea concreta (para el enlace "Deshacer última" en la tarjeta). */
+export async function deleteLastTaskCompletion(taskId: string, weekStartDate: string) {
+  const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  if (!user) throw new Error('No autorizado')
+
+  const list = await getCompletionsByUserAndWeek(user.id, weekStartDate)
+  const forTask = list
+    .filter((c) => c.task_id === taskId)
+    .sort((a, b) => new Date(b.completed_at).getTime() - new Date(a.completed_at).getTime())
+  const last = forTask[0]
+  if (!last) throw new Error('No hay realización que quitar en esta tarea')
+
+  await deleteTaskCompletionQuery(last.id)
+  const totalPoints = await calculateEffectivePointsForWeek(user.id, weekStartDate)
+  await updateWeeklyScorePoints(user.id, weekStartDate, totalPoints)
 }
 
 export async function validateTaskCompletion(completionId: string) {

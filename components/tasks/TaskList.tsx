@@ -10,9 +10,11 @@ type TaskListProps = {
   weeklyCompletionCounts?: Map<string, number>
   today?: string
   onComplete?: (taskId: string) => void
+  onUndoLast?: (taskId: string) => void
   onSwap?: (taskId: string) => void
   swaps?: Map<string, { isSwapped: boolean; swapType?: 'temporary' | 'permanent' }>
   loading?: string | null
+  undoingTaskId?: string | null
 }
 
 export default function TaskList({
@@ -21,9 +23,11 @@ export default function TaskList({
   weeklyCompletionCounts,
   today = '',
   onComplete,
+  onUndoLast,
   onSwap,
   swaps,
   loading,
+  undoingTaskId,
 }: TaskListProps) {
   return (
     <div className="space-y-4">
@@ -44,10 +48,12 @@ export default function TaskList({
               completionStatus={completion.status}
               weeklyCompletionCount={weeklyCount}
               onComplete={onComplete ? () => onComplete(task.id) : undefined}
+              onUndoLast={onUndoLast ? () => onUndoLast(task.id) : undefined}
               onSwap={onSwap ? () => onSwap(task.id) : undefined}
               isSwapped={swap.isSwapped}
               swapType={swap.swapType}
               loading={loading === task.id}
+              undoing={undoingTaskId === task.id}
             />
           )
         })
