@@ -162,11 +162,11 @@ export default function DashboardClient({
     setValidatingId(completionId)
     try {
       await validateTaskCompletion(completionId)
-      router.refresh()
     } catch (err) {
       console.error('Error validando:', err)
     } finally {
       setValidatingId(null)
+      router.refresh()
     }
   }
 
@@ -175,11 +175,11 @@ export default function DashboardClient({
     setDiscardingId(completionId)
     try {
       await discardTaskCompletion(completionId)
-      router.refresh()
     } catch (err) {
       console.error('Error descartando:', err)
     } finally {
       setDiscardingId(null)
+      router.refresh()
     }
   }
 
