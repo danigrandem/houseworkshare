@@ -102,7 +102,7 @@ export default function DashboardClient({
     } catch (error) {
       console.error('Error completing task:', error)
     } finally {
-      setLoading(null)
+      //  setLoading(null)
     }
   }
 
