@@ -1,12 +1,12 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import type { WeeklyScoreWithUser, TaskCompletionWithTask } from '@/lib/db/schema'
 import type { WeeklyAssignmentWithGroup } from '@/lib/db/schema'
 import { formatDateForDisplay, formatDateTime } from '@/lib/utils/date'
 import TaskFrequencyTag from '@/components/tasks/TaskFrequencyTag'
-import { createTaskCompletion, validateTaskCompletion, validateOwnTaskCompletion, discardTaskCompletion } from '@/app/actions'
+import { createTaskCompletion, validateTaskCompletion, discardTaskCompletion } from '@/app/actions'
 
 type ScoreWithAssignment = WeeklyScoreWithUser & {
   assignment: WeeklyAssignmentWithGroup | null
@@ -33,11 +33,16 @@ export default function HistoryClient({ weeksData, userId }: HistoryClientProps)
   const [markingTaskId, setMarkingTaskId] = useState<string | null>(null)
   const selectedWeekData = weeksData.find((w) => w.weekStart === selectedWeek)
 
+
+  useEffect(() => {
+    setMarkingTaskId(null)
+    setValidatingId(null)
+  }, [])
+
   const myScoreAndAssignment = selectedWeekData?.scores.find((s) => s.user_id === userId)
   const myTasks = myScoreAndAssignment?.assignment?.task_group?.tasks ?? []
   const completions = selectedWeekData?.completions ?? []
   const weekStart = selectedWeek ?? ''
-  console.log("myTasks", myTasks)
   const usersById = new Map(
     selectedWeekData?.scores?.map((s) => [s.user_id, s.user]) ?? []
   )
@@ -52,20 +57,7 @@ export default function HistoryClient({ weeksData, userId }: HistoryClientProps)
     } catch (err) {
       console.error('Error validando:', err)
     } finally {
-      setValidatingId(null)
-      router.refresh()
-    }
-  }
 
-  const handleValidateOwn = async (completionId: string) => {
-    setValidatingId(completionId)
-    try {
-      await validateOwnTaskCompletion(completionId)
-      router.refresh()
-    } catch (err) {
-      console.error('Error validando:', err)
-    } finally {
-      setValidatingId(null)
       router.refresh()
     }
   }
@@ -92,7 +84,7 @@ export default function HistoryClient({ weeksData, userId }: HistoryClientProps)
     } catch (err) {
       console.error('Error marcando como hecha:', err)
     } finally {
-      setMarkingTaskId(null)
+      // setMarkingTaskId(null)
       router.refresh()
     }
   }
@@ -197,7 +189,10 @@ export default function HistoryClient({ weeksData, userId }: HistoryClientProps)
                         ? validated.length >= 1
                         : validated.length >= min
                     const hasPending = pending.length > 0
-                    const noMarked = totalCount === 0
+                    const canAddMore =
+                      task.frequency === 'daily'
+                        ? totalCount < 1
+                        : totalCount < min
 
                     return (
                       <li
@@ -218,19 +213,9 @@ export default function HistoryClient({ weeksData, userId }: HistoryClientProps)
                             <span className="text-xs text-green-600 font-medium">Completada</span>
                           )}
                           {hasPending && !isCompleted && (
-                            <>
-                              <span className="text-xs text-amber-600">Pendiente de validar</span>
-                              {validatingId === pending[0].id && <button
-                                type="button"
-                                onClick={() => handleValidateOwn(pending[0].id)}
-                                disabled={validatingId === pending[0].id || discardingId !== null}
-                                className="px-3 py-1.5 text-sm font-medium text-white bg-celeste-600 rounded hover:bg-celeste-700 disabled:opacity-50"
-                              >
-                                {validatingId === pending[0].id ? 'Validando...' : 'Validar mi realización'}
-                              </button>}
-                            </>
+                            <span className="text-xs text-amber-600">Pendiente de validar</span>
                           )}
-                          {noMarked && (
+                          {canAddMore && (
                             <button
                               type="button"
                               onClick={() => handleMarkAsDone(task.id, task.points)}

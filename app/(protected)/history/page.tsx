@@ -23,7 +23,7 @@ export default async function HistoryPage() {
   const firstDayOfWeek = house.week_start_day ?? 1
   const currentWeek = getWeekStartString(undefined, firstDayOfWeek)
   const weeks: string[] = []
-  for (let i = 0; i <= 8; i++) {
+  for (let i = 1; i <= 8; i++) {
     const weekDate = getWeekStartString(addDays(currentWeek, -7 * i), firstDayOfWeek)
     weeks.push(weekDate)
   }
