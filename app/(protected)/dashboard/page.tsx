@@ -111,6 +111,7 @@ export default async function DashboardPage() {
       assignment={assignment}
       pointsTarget={pointsTarget}
       pointsEarned={pointsEarned}
+      weeklyScores={currentWeekScores}
       completions={completions}
       pendingCompletionsToValidate={pendingCompletionsToValidate}
       pendingProgressByKey={pendingProgressByKey}

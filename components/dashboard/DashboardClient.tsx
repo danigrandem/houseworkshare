@@ -21,10 +21,18 @@ type MemberWithAssignment = {
   assignment: WeeklyAssignmentWithGroup | null
 }
 
+type WeeklyScoreWithUser = {
+  user_id: string
+  points_earned: number
+  points_target: number
+  user: User
+}
+
 type DashboardClientProps = {
   assignment: WeeklyAssignmentWithGroup | null
   pointsTarget: number
   pointsEarned: number
+  weeklyScores?: WeeklyScoreWithUser[]
   completions: TaskCompletionWithTask[]
   pendingCompletionsToValidate: TaskCompletionWithTask[]
   /** Para mostrar progress bar en pendientes: key = `${user_id}_${task_id}` */
@@ -46,6 +54,7 @@ export default function DashboardClient({
   assignment,
   pointsTarget,
   pointsEarned,
+  weeklyScores = [],
   completions,
   pendingCompletionsToValidate,
   pendingProgressByKey = {},
@@ -222,7 +231,13 @@ export default function DashboardClient({
   }
 
   const daysRemaining = getDaysRemainingInWeek(new Date(), firstDayOfWeek)
-  const progressPercentage = pointsTarget > 0 ? (pointsEarned / pointsTarget) * 100 : 0
+  const scoresByUser = new Map(weeklyScores.map((ws) => [ws.user_id, ws]))
+  const progressItems = users.map((u) => {
+    const ws = scoresByUser.get(u.id)
+    const earned = ws ? ws.points_earned : u.id === userId ? pointsEarned : 0
+    const target = ws ? ws.points_target : pointsTarget
+    return { user: u, earned, target }
+  })
 
   return (
     <div className="min-h-screen bg-celeste-50">
@@ -236,19 +251,31 @@ export default function DashboardClient({
 
         <div className="bg-white rounded-lg shadow p-6 mb-6">
           <h2 className="text-xl font-semibold text-gray-900 mb-4">Progreso Semanal</h2>
-          <div className="mb-4">
-            <div className="flex justify-between text-sm text-gray-600 mb-2">
-              <span>
-                {pointsEarned} / {pointsTarget} puntos
-              </span>
-              <span>{Math.round(progressPercentage)}%</span>
-            </div>
-            <div className="w-full bg-gray-200 rounded-full h-4">
-              <div
-                className="bg-green-600 h-4 rounded-full transition-all"
-                style={{ width: `${Math.min(progressPercentage, 100)}%` }}
-              ></div>
-            </div>
+          <div className="mb-4 space-y-4">
+            {progressItems.map(({ user: u, earned, target }) => {
+              const pct = target > 0 ? (earned / target) * 100 : 0
+              const name = u.name || u.email || 'Sin nombre'
+              const isCurrentUser = u.id === userId
+              return (
+                <div key={u.id}>
+                  <div className="flex justify-between text-sm text-gray-600 mb-1">
+                    <span className="font-medium text-gray-800">
+                      {name}
+                      {isCurrentUser && ' (tú)'}
+                    </span>
+                    <span>
+                      {earned} / {target} puntos · {Math.round(pct)}%
+                    </span>
+                  </div>
+                  <div className="w-full bg-gray-200 rounded-full h-3">
+                    <div
+                      className={`h-3 rounded-full transition-all ${isCurrentUser ? 'bg-green-600' : 'bg-blue-500'}`}
+                      style={{ width: `${Math.min(pct, 100)}%` }}
+                    />
+                  </div>
+                </div>
+              )
+            })}
           </div>
           <p className="text-sm text-gray-600">
             {daysRemaining} días restantes en la semana
