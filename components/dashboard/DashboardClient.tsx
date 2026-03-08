@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import type {
   WeeklyAssignmentWithGroup,
@@ -74,6 +74,17 @@ export default function DashboardClient({
   const [undoingLast, setUndoingLast] = useState(false)
   const [undoingTaskId, setUndoingTaskId] = useState<string | null>(null)
 
+
+  useEffect(() => {
+    setValidatingId(null)
+    setDiscardingId(null)
+    setValidatingExtraId(null)
+    setUndoingLast(false)
+    setUndoingTaskId(null)
+    setClearingAssignment(false)
+    setAddingExtra(false)
+  }, [])
+
   const tasks = assignment?.task_group?.tasks || []
   const completionsMap = new Map(
     completions.map((c) => {
@@ -129,7 +140,7 @@ export default function DashboardClient({
     } catch (err) {
       console.error('Error al quitar última realización:', err)
     } finally {
-      setUndoingLast(false)
+      //  setUndoingLast(false)
     }
   }
 
@@ -141,7 +152,7 @@ export default function DashboardClient({
     } catch (err) {
       console.error('Error al deshacer realización:', err)
     } finally {
-      setUndoingTaskId(null)
+      //  setUndoingTaskId(null)
     }
   }
 
@@ -154,7 +165,7 @@ export default function DashboardClient({
     } catch (err) {
       console.error('Error al quitar asignación:', err)
     } finally {
-      setClearingAssignment(false)
+      //  setClearingAssignment(false)
     }
   }
 
@@ -165,7 +176,7 @@ export default function DashboardClient({
     } catch (err) {
       console.error('Error validando:', err)
     } finally {
-      setValidatingId(null)
+      // setValidatingId(null)
       router.refresh()
     }
   }
@@ -178,7 +189,7 @@ export default function DashboardClient({
     } catch (err) {
       console.error('Error descartando:', err)
     } finally {
-      setDiscardingId(null)
+      //  setDiscardingId(null)
       router.refresh()
     }
   }
@@ -191,7 +202,7 @@ export default function DashboardClient({
     } catch (err) {
       console.error('Error validando:', err)
     } finally {
-      setValidatingExtraId(null)
+      //  setValidatingExtraId(null)
     }
   }
 
@@ -206,7 +217,7 @@ export default function DashboardClient({
     } catch (err) {
       console.error('Error añadiendo tarea extra:', err)
     } finally {
-      setAddingExtra(false)
+      //  setAddingExtra(false)
     }
   }
 
