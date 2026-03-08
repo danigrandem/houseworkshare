@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/server'
 import {
   createTaskCompletion as createCompletion,
   validateTaskCompletion as validateCompletionQuery,
+  validateOwnTaskCompletionQuery,
   getCompletionsByUserAndWeek,
   deleteTaskCompletion as deleteTaskCompletionQuery,
 } from '@/lib/db/queries/completions'
@@ -102,6 +103,28 @@ export async function validateTaskCompletion(completionId: string) {
   if (!completion) throw new Error('Completado no encontrado')
 
   await validateCompletionQuery(completionId, user.id)
+
+  const totalPoints = await calculateEffectivePointsForWeek(completion.user_id, completion.week_start_date)
+  await updateWeeklyScorePoints(completion.user_id, completion.week_start_date, totalPoints)
+}
+
+/** Validar tu propia realización pendiente (para que cuente en puntos). */
+export async function validateOwnTaskCompletion(completionId: string) {
+  const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  if (!user) throw new Error('No autorizado')
+
+  const { data: completion } = await supabase
+    .from('task_completions')
+    .select('user_id, week_start_date')
+    .eq('id', completionId)
+    .single()
+
+  if (!completion) throw new Error('Completado no encontrado')
+
+  await validateOwnTaskCompletionQuery(completionId, user.id)
 
   const totalPoints = await calculateEffectivePointsForWeek(completion.user_id, completion.week_start_date)
   await updateWeeklyScorePoints(completion.user_id, completion.week_start_date, totalPoints)

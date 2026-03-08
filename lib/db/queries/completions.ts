@@ -11,7 +11,7 @@ export async function createTaskCompletion(
 ): Promise<TaskCompletion> {
   const supabase = await createClient()
   const houseId = await requireHouseId(userId)
-  
+
   const { data, error } = await supabase
     .from('task_completions')
     .insert({
@@ -34,7 +34,7 @@ export async function createTaskCompletion(
 export async function validateTaskCompletion(completionId: string, validatorUserId: string): Promise<void> {
   const supabase = await createClient()
   const houseId = await requireHouseId(validatorUserId)
-  
+
   const { data: completion, error: fetchError } = await supabase
     .from('task_completions')
     .select('id, user_id, house_id')
@@ -57,13 +57,44 @@ export async function validateTaskCompletion(completionId: string, validatorUser
   if (error) throw error
 }
 
+/** Validar tu propia realización pendiente (para que cuente en puntos). */
+export async function validateOwnTaskCompletionQuery(
+  completionId: string,
+  userId: string
+): Promise<void> {
+  const supabase = await createClient()
+  const houseId = await requireHouseId(userId)
+
+  const { data: completion, error: fetchError } = await supabase
+    .from('task_completions')
+    .select('id, user_id, house_id, status')
+    .eq('id', completionId)
+    .eq('house_id', houseId)
+    .single()
+
+  if (fetchError || !completion) throw new Error('Completado no encontrado')
+  if (completion.user_id !== userId) throw new Error('Solo puedes validar tu propia realización')
+  if (completion.status !== 'pending') throw new Error('Solo se pueden validar realizaciones pendientes')
+
+  const { error } = await supabase
+    .from('task_completions')
+    .update({
+      status: 'validated',
+      validated_at: new Date().toISOString(),
+      validated_by: userId,
+    })
+    .eq('id', completionId)
+
+  if (error) throw error
+}
+
 export async function getCompletionsByWeek(
   weekStartDate: string,
   userId: string
 ): Promise<TaskCompletionWithTask[]> {
   const supabase = await createClient()
   const houseId = await requireHouseId(userId)
-  
+
   const { data, error } = await supabase
     .from('task_completions')
     .select(`
@@ -87,7 +118,7 @@ export async function getCompletionsByUserAndWeek(
 ): Promise<TaskCompletionWithTask[]> {
   const supabase = await createClient()
   const houseId = await requireHouseId(userId)
-  
+
   const { data, error } = await supabase
     .from('task_completions')
     .select(`
@@ -123,7 +154,7 @@ export async function getTaskCompletionsByTask(
 ): Promise<TaskCompletion[]> {
   const supabase = await createClient()
   const houseId = await requireHouseId(userId)
-  
+
   const { data, error } = await supabase
     .from('task_completions')
     .select('*')
@@ -143,7 +174,7 @@ export async function getPendingCompletionsToValidate(
 ): Promise<TaskCompletionWithTask[]> {
   const supabase = await createClient()
   const houseId = await requireHouseId(userId)
-  
+
   const { data, error } = await supabase
     .from('task_completions')
     .select(`
