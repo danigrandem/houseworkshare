@@ -304,7 +304,7 @@ export async function getAllWeeklyScores(
 export async function getAllUsers(userId: string): Promise<User[]> {
   const supabase = await createClient()
   const houseId = await requireHouseId(userId)
-  
+
   const { data: members, error: membersError } = await supabase
     .from('house_members')
     .select('user:users(*)')
@@ -315,5 +315,68 @@ export async function getAllUsers(userId: string): Promise<User[]> {
     const row = m as unknown as { user: User | User[] }
     const user = Array.isArray(row.user) ? row.user[0] : row.user
     return user
+  })
+}
+
+export async function getAllWeeklyAssignmentsWithGroups(
+  weekStartDate: string,
+  userId: string
+): Promise<WeeklyAssignmentWithGroup[]> {
+  const supabase = await createClient()
+  const houseId = await requireHouseId(userId)
+
+  const { data: assignments, error: assignmentsError } = await supabase
+    .from('weekly_assignments')
+    .select('*')
+    .eq('week_start_date', weekStartDate)
+    .eq('house_id', houseId)
+
+  if (assignmentsError) throw assignmentsError
+  if (!assignments || assignments.length === 0) return []
+
+  const taskGroupIds = [...new Set(assignments.map((a) => a.task_group_id).filter(Boolean))] as string[]
+  if (taskGroupIds.length === 0) {
+    return assignments.map((a) => ({ ...a, task_group: null }))
+  }
+
+  const [{ data: groups, error: groupsError }, { data: items, error: itemsError }] = await Promise.all([
+    supabase.from('task_groups').select('*').in('id', taskGroupIds),
+    supabase.from('task_group_items').select('task_id, task_group_id').in('task_group_id', taskGroupIds),
+  ])
+
+  if (groupsError) throw groupsError
+  if (itemsError) throw itemsError
+
+  const taskIds = [...new Set((items || []).map((i) => i.task_id))]
+  let tasks: import('@/lib/db/schema').Task[] = []
+  if (taskIds.length > 0) {
+    const { data: tasksData, error: tasksError } = await supabase
+      .from('tasks')
+      .select('*')
+      .in('id', taskIds)
+    if (tasksError) throw tasksError
+    tasks = tasksData || []
+  }
+
+  const tasksById = new Map(tasks.map((t) => [t.id, t]))
+  const tasksByGroup = new Map<string, import('@/lib/db/schema').Task[]>()
+  ;(items || []).forEach((item) => {
+    const task = tasksById.get(item.task_id)
+    if (task) {
+      const arr = tasksByGroup.get(item.task_group_id) || []
+      arr.push(task)
+      tasksByGroup.set(item.task_group_id, arr)
+    }
+  })
+
+  const groupsById = new Map((groups || []).map((g) => [g.id, g]))
+
+  return assignments.map((assignment) => {
+    const group = assignment.task_group_id ? groupsById.get(assignment.task_group_id) : null
+    const groupTasks = assignment.task_group_id ? (tasksByGroup.get(assignment.task_group_id) || []) : []
+    return {
+      ...assignment,
+      task_group: group ? ({ ...group, tasks: groupTasks } as TaskGroupWithTasks) : null,
+    }
   })
 }

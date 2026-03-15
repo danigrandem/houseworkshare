@@ -203,7 +203,7 @@ export async function expireTemporarySwaps(): Promise<void> {
 export async function getSwapsByWeek(weekStartDate: string, userId: string): Promise<TaskSwapWithTask[]> {
   const supabase = await createClient()
   const houseId = await requireHouseId(userId)
-  
+
   const { data, error } = await supabase
     .from('task_swaps')
     .select(`
@@ -224,4 +224,40 @@ export async function getSwapsByWeek(weekStartDate: string, userId: string): Pro
     from_user: item.from_user as User,
     to_user: item.to_user as User,
   }))
+}
+
+export async function getActiveSwapsForTasks(
+  taskIds: string[],
+  weekStartDate: string,
+  userId: string,
+  currentDate?: Date
+): Promise<Map<string, { isSwapped: boolean; swapType: 'temporary' | 'permanent' }>> {
+  if (taskIds.length === 0) return new Map()
+
+  const supabase = await createClient()
+  const houseId = await requireHouseId(userId)
+  const date = currentDate || new Date()
+  const dateString = date.toISOString().split('T')[0]
+
+  const { data, error } = await supabase
+    .from('task_swaps')
+    .select('task_id, swap_type, swap_date')
+    .in('task_id', taskIds)
+    .eq('week_start_date', weekStartDate)
+    .eq('house_id', houseId)
+    .eq('status', 'accepted')
+    .or(`swap_date.is.null,swap_date.eq.${dateString}`)
+
+  if (error) throw error
+
+  const result = new Map<string, { isSwapped: boolean; swapType: 'temporary' | 'permanent' }>()
+  for (const swap of data || []) {
+    if (swap.swap_type === 'temporary' && swap.swap_date) {
+      const swapDate = new Date(swap.swap_date)
+      if (!isSameDay(date, swapDate)) continue
+    }
+    result.set(swap.task_id, { isSwapped: true, swapType: swap.swap_type as 'temporary' | 'permanent' })
+  }
+
+  return result
 }

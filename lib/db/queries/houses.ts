@@ -1,3 +1,4 @@
+import { cache } from 'react'
 import { createClient } from '@/lib/supabase/server'
 import type {
   House,
@@ -86,9 +87,9 @@ export async function getUserHouses(userId: string): Promise<House[]> {
   })
 }
 
-export async function getCurrentUserHouse(userId: string): Promise<HouseWithMembers | null> {
+export const getCurrentUserHouse = cache(async (userId: string): Promise<HouseWithMembers | null> => {
   const supabase = await createClient()
-  
+
   const { data: user, error: userError } = await supabase
     .from('users')
     .select('current_house_id')
@@ -121,7 +122,7 @@ export async function getCurrentUserHouse(userId: string): Promise<HouseWithMemb
       return { ...(m as object), user }
     }),
   }
-}
+})
 
 export async function updateHouseWeekStartDay(houseId: string, weekStartDay: number): Promise<void> {
   const supabase = await createClient()

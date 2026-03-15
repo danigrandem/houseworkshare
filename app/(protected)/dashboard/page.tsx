@@ -8,11 +8,12 @@ import {
   getWeeklyConfig,
   getAllUsers,
   getAllWeeklyScores,
+  getAllWeeklyAssignmentsWithGroups,
 } from '@/lib/db/queries/weekly'
 import { processWeekEnd } from '@/lib/utils/weekly-scores'
 import { getCompletionsByUserAndWeek, getCompletionsByWeek, getPendingCompletionsToValidate } from '@/lib/db/queries/completions'
 import { getExtraCompletionsByUserAndWeek, getPendingExtraCompletionsToValidate } from '@/lib/db/queries/extra-completions'
-import { getPendingSwapsForUser, getActiveSwapForTask } from '@/lib/db/queries/swaps'
+import { getPendingSwapsForUser, getActiveSwapsForTasks } from '@/lib/db/queries/swaps'
 import DashboardClient from '@/components/dashboard/DashboardClient'
 
 export default async function DashboardPage() {
@@ -56,45 +57,27 @@ export default async function DashboardPage() {
     getExtraCompletionsByUserAndWeek(user.id, weekStartDate),
     getPendingExtraCompletionsToValidate(weekStartDate, user.id),
   ])
-  const membersAssignments = await Promise.all(
-    users.map((u) => getWeeklyAssignment(u.id, weekStartDate))
-  )
-  const membersWithAssignments = users.map((u, i) => ({
+  const tasks = assignment?.task_group?.tasks || []
+
+  const [allMembersAssignments, swapsMap] = await Promise.all([
+    getAllWeeklyAssignmentsWithGroups(weekStartDate, user.id),
+    getActiveSwapsForTasks(tasks.map((t) => t.id), weekStartDate, user.id),
+  ])
+
+  const assignmentsByUser = new Map(allMembersAssignments.map((a) => [a.user_id, a]))
+  const membersWithAssignments = users.map((u) => ({
     user: u,
-    assignment: membersAssignments[i],
+    assignment: assignmentsByUser.get(u.id) ?? null,
   }))
 
   const pointsTarget = weeklyConfig?.points_target_per_person || 50
   const pointsEarned = weeklyScore?.points_earned || 0
   const today = new Date().toISOString().slice(0, 10)
 
-  const tasks = assignment?.task_group?.tasks || []
-  const activeSwaps = await Promise.all(
-    tasks.map(async (task) => {
-      const swap = await getActiveSwapForTask(task.id, weekStartDate, user.id)
-      return { taskId: task.id, swap }
-    })
-  )
-
-  const swapsMap = new Map(
-    activeSwaps
-      .filter((item) => item.swap)
-      .map((item) => [
-        item.taskId,
-        {
-          isSwapped: true,
-          swapType: item.swap?.swap_type,
-        },
-      ])
-  )
-
   const distinctUserIds = [...new Set(pendingCompletionsToValidate.map((c) => c.user_id))]
-  const userCompletionsForProgress = await Promise.all(
-    distinctUserIds.map((uid) => getCompletionsByUserAndWeek(uid, weekStartDate))
-  )
   const pendingProgressByKey: Record<string, { count: number; min: number }> = {}
-  distinctUserIds.forEach((uid, i) => {
-    const comps = userCompletionsForProgress[i]
+  distinctUserIds.forEach((uid) => {
+    const comps = allCompletions.filter((c) => c.user_id === uid)
     const byTask = new Map<string, number>()
     comps.forEach((c) => byTask.set(c.task_id, (byTask.get(c.task_id) || 0) + 1))
     byTask.forEach((count, taskId) => {
